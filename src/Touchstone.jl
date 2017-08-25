@@ -98,11 +98,12 @@ function *(M1::TouchstoneData{ABCDparams}, M2::TouchstoneData{ABCDparams})
 end
 
 function ^(ABCD::TouchstoneData{ABCDparams}, N::Int)
-    ABCDᴺ_data = zeros(Complex128, (2, 2, ABCD.nPoint))
+    nPoint = ABCD.nPoint
+    ABCDᴺ_data = zeros(Complex128, (2, 2, nPoint))
     for n in 1:nPoint
         ABCDᴺ_data[:, :, n] = ABCD.data[:, :, n] ^ N
     end
-    return TouchstoneData(ABCDparams, 2, ABCD.nPoint, ABCD.Z₀, ABCD.freq, ABCDᴺ_data)
+    return TouchstoneData(ABCDparams, 2, nPoint, ABCD.Z₀, ABCD.freq, ABCDᴺ_data)
 end
 
 """
@@ -192,7 +193,7 @@ function terminate(s::TouchstoneData{Sparams}, t::TouchstoneData{Sparams})
     s′_data = zeros(Complex128, size(t.data))
     s′_data[1, 1, :] = (s.data[1, 1, :] + s.data[2, 1, :] .* t.data[1, 1, :]
         .* s.data[1, 2, :] ./ (1 - t.data[1, 1, :] .* s.data[2, 2, :]))
-    return TouchstoneData{Sparams}(s.Z₀, s.freq, s′_data)
+    return TouchstoneData(Sparams, 1, s.nPoint, s.Z₀, s.freq, s′_data)
 end
 terminate{T<:TouchstoneParams, S<:TouchstoneParams}(s::TouchstoneData{T},
     t::TouchstoneData{S}) = terminate(convert(Sparams, s), convert(Sparams, t))
