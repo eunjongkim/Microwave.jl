@@ -93,6 +93,7 @@ Conversion from S parameters to ABCD parameters
 function _S_to_ABCD(S::TouchstoneData{Sparams})
     if S.nPort != 2
         error("Touchstone Error: ABCD-parameters are defined only for 2-port networks")
+    end
     nPoint = S.nPoint
     freq = S.freq
     Z₀ = S.Z₀
