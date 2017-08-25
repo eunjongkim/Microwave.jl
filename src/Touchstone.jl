@@ -70,11 +70,11 @@ end
 function show(io::IO, x::TouchstoneData)
     if x.typ == Sparams
         parameter_type = "S"
-    elseif x.typ = Yparams
+    elseif x.typ == Yparams
         parameter_type = "Y"
-    elseif x.typ = Zparams
+    elseif x.typ == Zparams
         parameter_type = "Z"
-    elseif x.typ = ABCDparams
+    elseif x.typ == ABCDparams
         parameter_type = "ABCD"
     end
     write(io, "$(x.nPort)-port $(parameter_type)-parameters (Z₀ = $(x.Z₀), # of datapoints = $(x.nPoint))")
