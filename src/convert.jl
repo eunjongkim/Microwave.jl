@@ -12,7 +12,9 @@ convert(::Type{TouchstoneData{ABCDparams}}, S::TouchstoneData{Sparams}) =
     _S_to_ABCD(S)
 # conversion from Yparams, Zparams to Sparams : TODO
 
-
+"""
+Conversion from RawTouchstone to TouchstoneData{Sparams}
+"""
 function _Raw_to_S(touchstone::RawTouchstone)
     nPort = touchstone.nPort
     nPoint = touchstone.nPoint
