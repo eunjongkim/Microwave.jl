@@ -3,15 +3,7 @@ convert{T<:TouchstoneParams, S<:TouchstoneParams}(::Type{T}, D::TouchstoneData{S
     convert(TouchstoneData{T}, D)
 convert{T<:TouchstoneParams}(::Type{T}, D::RawTouchstone) =
     convert(TouchstoneData{T}, D)
-
-convert(::Type{TouchstoneData{Sparams}}, Raw::RawTouchstone) = _Raw_to_S(Raw)
-convert(::Type{TouchstoneData{Sparams}}, ABCD::TouchstoneData{ABCDparams}) =
-    _ABCD_to_S(ABCD)
-
-convert(::Type{TouchstoneData{ABCDparams}}, S::TouchstoneData{Sparams}) =
-    _S_to_ABCD(S)
-# conversion from Yparams, Zparams to Sparams : TODO
-
+convert(::Type{TouchstoneData{Sparams}}, R::RawTouchstone) = _Raw_to_S(R)
 """
 Conversion from RawTouchstone to TouchstoneData{Sparams}
 """
@@ -69,6 +61,109 @@ end
 
 
 
+
+# for general nPort parameters:
+convert(::Type{TouchstoneData{Zparams}}, S::TouchstoneData{Sparams}) =
+    _S_to_Z(S)
+convert(::Type{TouchstoneData{Yparams}}, S::TouchstoneData{Sparams}) =
+    _S_to_Y(S)
+convert(::Type{TouchstoneData{Sparams}}, Z::TouchstoneData{Zparams}) =
+    _Z_to_S(Z)
+convert(::Type{TouchstoneData{Sparams}}, Y::TouchstoneData{Yparams}) =
+    _Y_to_S(Y)
+convert(::Type{TouchstoneData{Zparams}}, Y::TouchstoneData{Yparams}) =
+    TouchstoneData{Zparams, Y.nPort, Y.nPoint, Y.Z₀, Y.freq, _invert(Y.data)}
+convert(::Type{TouchstoneData{Yparams}}, Z::TouchstoneData{Zparams}) =
+    TouchstoneData{Yparams, Z.nPort, Z.nPoint, Z.Z₀, Z.freq, _invert(Z.data)}
+
+"""
+Matrix inversion of touchstone data
+"""
+function _invert(D::Array{Complex128, 3})
+    nPort, _, nPoint = size(D)
+    D_inv = zero(Complex128, (nPort, nPort, nPoint))
+    for n in 1:nPoint
+        D_inv[:, :, n] = inv(D[:, :, n])
+    end
+    return D_inv
+end
+
+"""
+Identity matrix of `nPort`-network of `nPoint` datapoints
+"""
+function _identity(nPort::Integer, nPoint::Integer)
+    E = zeros(Complex128, (nPort, nPort, nPoint))
+    for n in 1:nPoint
+        E[:, :, n] = eye(nPort)
+    end
+    return E
+end
+"""
+Identity matrix similar to the given TouchstoneData
+"""
+_identity{T<:TouchstoneParams}(D::TouchstoneData{T}) = _identity(D.nPort, .nPoint)
+
+"""
+Conversion from S-parameters to Z-parameters
+"""
+function _S_to_Z(S::TouchstoneData{Sparams})
+    E = _identity(S)
+    nPort, nPoint, Z₀ = S.nPort, S.nPoint, S.Z₀
+    Z_data = zeros(Complex128, (nPort, nPort, nPoint))
+    for n in 1:nPoint
+        Z_data[:, :, n] = inv(E[:, :, n] - S.data[:, :, n]) * (E[:, :, n] + S.data[:, :, n]) * Z₀
+    end
+    return TouchstoneData(Zparams, nPort, nPoint, Z₀, S.freq, Z_data)
+end
+
+"""
+Conversion from S-parameters to Y-parameters
+"""
+function _S_to_Y(S::TouchstoneParams{Sparams})
+    E = _identity(S)
+    nPort, nPoint, Z₀ = S.nPort, S.nPoint, S.Z₀
+    Y_data = zeros(Complex128, (nPort, nPort, nPoint))
+    for n in 1:nPoint
+        Y_data[:, :, n] = 1 / Z₀ * inv(E[:, :, n] + S[:, :, n]) * (E[:, :, n] - S[:, :, n])
+    end
+    return TouchstoneData(Yparams, nPort, nPoint, Z₀, S.freq, Y_data)
+end
+
+"""
+Conversion from Z-parameters to S-parameters
+"""
+function _Z_to_S(Z::TouchstoneData{Sparams})
+    E = _identity(Z)
+    nPort, nPoint, Z₀ = Z.nPort, Z.nPoint, Z.Z₀
+    S_data = zeros(Complex128, (nPort, nPort, nPoint))
+    for n in 1:nPoint
+        S_data[:, :, n] = (Z[:, :, n]/Z₀ - E[:, :, n]) * inv(Z[:, :, n]/Z₀ + E[:, :, n])
+    end
+    return TouchstoneData(Sparams, nPort, nPoint, Z₀, Z.freq, S_data)
+end
+
+"""
+Conversion from Y-parameters to S-parameters
+"""
+function _Y_to_S(Y::TouchstoneData{Sparams})
+    E = _identity(Y)
+    nPort, nPoint, Z₀ = Y.nPort, Y.nPoint, Y.Z₀
+    S_data = zeros(Complex128, (nPort, nPort, nPoint))
+    for n in 1:nPoint
+        S_data[:, :, n] = (E[:, :, n] - Z₀ * Y[:, :, n]) * inv(E[:, :, n] + Z₀ * Y[:, :, n])
+    end
+    return TouchstoneData(Sparams, nPort, nPoint, Z₀, Y.freq, S_data)
+end
+
+
+
+
+# for two-port parameters
+convert(::Type{TouchstoneData{Sparams}}, ABCD::TouchstoneData{ABCDparams}) =
+    _ABCD_to_S(ABCD)
+convert(::Type{TouchstoneData{ABCDparams}}, S::TouchstoneData{Sparams}) =
+    _S_to_ABCD(S)
+
 """
 Conversion from ABCD-parameters to S-parameters
 """
@@ -90,7 +185,7 @@ function _ABCD_to_S(ABCD::TouchstoneData{ABCDparams})
 end
 
 """
-Conversion from S parameters to ABCD parameters
+Conversion from S-parameters to ABCD-parameters
 """
 function _S_to_ABCD(S::TouchstoneData{Sparams})
     if S.nPort != 2
