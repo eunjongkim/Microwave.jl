@@ -1,7 +1,7 @@
 # convert(any-params, data) = convert(NetworkData{any-params}, data)
-convert{T<:TouchstoneParams, S<:TouchstoneParams}(::Type{T}, D::NetworkData{S}) =
+convert(::Type{T}, D::NetworkData{S}) where {T<:NetworkParams, S<:NetworkParams} =
     convert(NetworkData{T}, D)
-convert{T<:TouchstoneParams}(::Type{T}, D::Touchstone) =
+convert(::Type{T}, D::Touchstone) where {T<:NetworkParams} =
     convert(NetworkData{T}, D)
 convert(::Type{NetworkData{Sparams}}, R::Touchstone) = _Raw_to_S(R)
 
@@ -11,7 +11,7 @@ Conversion from `Touchstone` to `NetworkData{Sparams}`
 function _Raw_to_S(touchstone::Touchstone)
     nPort = touchstone.nPort
     nPoint = touchstone.nPoint
-    Z₀ = touchstone.Z₀
+    Z₀ = touchstone.impedance
     freq_unit = touchstone.freq_unit
     data_type = touchstone.data_type
     format_type = touchstone.format_type
@@ -73,9 +73,9 @@ convert(::Type{NetworkData{Sparams}}, Z::NetworkData{Zparams}) =
 convert(::Type{NetworkData{Sparams}}, Y::NetworkData{Yparams}) =
     _Y_to_S(Y)
 convert(::Type{NetworkData{Zparams}}, Y::NetworkData{Yparams}) =
-    NetworkData{Zparams, Y.nPort, Y.nPoint, Y.Z₀, Y.freq, _invert(Y.data)}
+    NetworkData{Zparams, Y.nPort, Y.nPoint, Y.impedance, Y.frequency, _invert(Y.data)}
 convert(::Type{NetworkData{Yparams}}, Z::NetworkData{Zparams}) =
-    NetworkData{Yparams, Z.nPort, Z.nPoint, Z.Z₀, Z.freq, _invert(Z.data)}
+    NetworkData{Yparams, Z.nPort, Z.nPoint, Z.impedance, Z.frequency, _invert(Z.data)}
 
 """
 Matrix inversion of touchstone data
@@ -102,32 +102,32 @@ end
 """
 Identity matrix similar to the given NetworkData
 """
-_identity{T<:TouchstoneParams}(D::NetworkData{T}) = _identity(D.nPort, .nPoint)
+_identity{T<:NetworkParams}(D::NetworkData{T}) = _identity(D.nPort, D.nPoint)
 
 """
 Conversion from S-parameters to Z-parameters
 """
 function _S_to_Z(S::NetworkData{Sparams})
     E = _identity(S)
-    nPort, nPoint, Z₀ = S.nPort, S.nPoint, S.Z₀
+    nPort, nPoint, Z₀ = S.nPort, S.nPoint, S.impedance
     Z_data = zeros(Complex128, (nPort, nPort, nPoint))
     for n in 1:nPoint
         Z_data[:, :, n] = inv(E[:, :, n] - S.data[:, :, n]) * (E[:, :, n] + S.data[:, :, n]) * Z₀
     end
-    return NetworkData(Zparams, nPort, nPoint, Z₀, S.freq, Z_data)
+    return NetworkData(Zparams, nPort, nPoint, Z₀, S.frequency, Z_data)
 end
 
 """
 Conversion from S-parameters to Y-parameters
 """
-function _S_to_Y(S::TouchstoneParams{Sparams})
+function _S_to_Y(S::NetworkData{Sparams})
     E = _identity(S)
-    nPort, nPoint, Z₀ = S.nPort, S.nPoint, S.Z₀
+    nPort, nPoint, Z₀ = S.nPort, S.nPoint, S.impedance
     Y_data = zeros(Complex128, (nPort, nPort, nPoint))
     for n in 1:nPoint
         Y_data[:, :, n] = 1 / Z₀ * inv(E[:, :, n] + S[:, :, n]) * (E[:, :, n] - S[:, :, n])
     end
-    return NetworkData(Yparams, nPort, nPoint, Z₀, S.freq, Y_data)
+    return NetworkData(Yparams, nPort, nPoint, Z₀, S.frequency, Y_data)
 end
 
 """
@@ -135,12 +135,12 @@ Conversion from Z-parameters to S-parameters
 """
 function _Z_to_S(Z::NetworkData{Sparams})
     E = _identity(Z)
-    nPort, nPoint, Z₀ = Z.nPort, Z.nPoint, Z.Z₀
+    nPort, nPoint, Z₀ = Z.nPort, Z.nPoint, Z.impedance
     S_data = zeros(Complex128, (nPort, nPort, nPoint))
     for n in 1:nPoint
         S_data[:, :, n] = (Z[:, :, n]/Z₀ - E[:, :, n]) * inv(Z[:, :, n]/Z₀ + E[:, :, n])
     end
-    return NetworkData(Sparams, nPort, nPoint, Z₀, Z.freq, S_data)
+    return NetworkData(Sparams, nPort, nPoint, Z₀, Z.frequency, S_data)
 end
 
 """
@@ -148,12 +148,12 @@ Conversion from Y-parameters to S-parameters
 """
 function _Y_to_S(Y::NetworkData{Sparams})
     E = _identity(Y)
-    nPort, nPoint, Z₀ = Y.nPort, Y.nPoint, Y.Z₀
+    nPort, nPoint, Z₀ = Y.nPort, Y.nPoint, Y.impedance
     S_data = zeros(Complex128, (nPort, nPort, nPoint))
     for n in 1:nPoint
         S_data[:, :, n] = (E[:, :, n] - Z₀ * Y[:, :, n]) * inv(E[:, :, n] + Z₀ * Y[:, :, n])
     end
-    return NetworkData(Sparams, nPort, nPoint, Z₀, Y.freq, S_data)
+    return NetworkData(Sparams, nPort, nPoint, Z₀, Y.frequency, S_data)
 end
 
 
@@ -170,8 +170,8 @@ Conversion from ABCD-parameters to S-parameters
 """
 function _ABCD_to_S(ABCD::NetworkData{ABCDparams})
     nPoint = ABCD.nPoint
-    freq = ABCD.freq
-    Z₀ = ABCD.Z₀
+    freq = ABCD.frequency
+    Z₀ = ABCD.impedance
     S = zeros(Complex128, (2, 2, nPoint))
     # converting abcd matrix into scattering matrix
     for n in 1:nPoint
@@ -193,8 +193,8 @@ function _S_to_ABCD(S::NetworkData{Sparams})
         error("Touchstone Error: ABCD-parameters are defined only for 2-port networks")
     end
     nPoint = S.nPoint
-    freq = S.freq
-    Z₀ = S.Z₀
+    freq = S.frequency
+    Z₀ = S.impedance
 
     ABCD = zeros(Complex128, (2, 2, nPoint))    # converting S-parameters into ABCD parameters
     for n in 1:nPoint

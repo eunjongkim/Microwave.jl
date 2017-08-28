@@ -5,7 +5,7 @@ Touchstone data in its raw form, imported from a touchstone file `*.sNp`
 mutable struct Touchstone
     nPort::Int
     nPoint::Int
-    Z₀::Float64
+    impedance::Float64
     freq_unit::String
     data_type::String
     format_type::String
@@ -17,7 +17,7 @@ function show(io::IO, x::Touchstone)
 end
 
 """
-Read information (frequency unit, data type, format type, Z₀)
+Read information (frequency unit, data type, format type, impedance)
 and data from a touchstone (.sNp) file.
 """
 function read_touchstone(filepath::AbstractString; raw=false)
@@ -34,14 +34,14 @@ function read_touchstone(filepath::AbstractString; raw=false)
     while phrase[1] != '#'
         #=
         read lines until first encountering '#', where frequency unit,
-        data type, format type, and Z₀ are stored.
+        data type, format type, and impedance are stored.
         =#
         phrase = readline(f)
     end
 
-    _, freq_unit, data_type, format_type, _, Z₀ = split(phrase, " ");
+    _, freq_unit, data_type, format_type, _, impedance = split(phrase, " ");
 
-    Z₀ = parse(Float64, Z₀)
+    impedance = parse(Float64, impedance)
     data = []
     while true
         line = readline(f)
@@ -67,7 +67,7 @@ function read_touchstone(filepath::AbstractString; raw=false)
     data = hcat([v for v in data]...)
     nPoint = length(data[1, :])
     close(f)
-    touchstone = Touchstone(nPort, nPoint, Z₀, uppercase(freq_unit),
+    touchstone = Touchstone(nPort, nPoint, impedance, uppercase(freq_unit),
         uppercase(data_type), uppercase(format_type), data)
     if raw == true
         return touchstone
