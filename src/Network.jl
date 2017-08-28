@@ -1,10 +1,13 @@
-export NetworkData, NetworkParams, Sparams, Yparams, Zparams, ABCDparams
+export NetworkData, NetworkParams, Sparams, Yparams, Zparams
+export TwoPortParams, ABCDparams
 
 abstract type NetworkParams end
 abstract type Sparams <: NetworkParams end
 abstract type Yparams <: NetworkParams end
 abstract type Zparams <: NetworkParams end
-abstract type ABCDparams <: NetworkParams end
+
+abstract type TwoPortParams <: NetworkParams end
+abstract type ABCDparams <: TwoPortParams end
 
 """
     NetworkData{T<:NetworkParams}
@@ -24,8 +27,8 @@ mutable struct NetworkData{T<:NetworkParams}
         if n3 != nPoint
             error("NetworkData Error: the number of data points doesn't match with `nPoint`")
         end
-        if (typ == ABCDparams) & (nPort !=2)
-            error("NetworkData Error: ABCD-parameters are defined only for nPort=2 networks.")
+        if (typ <: TwoPortParams) & (nPort !=2)
+            error("NetworkData Error: $(typ) NetworkData are defined only for nPort=2 networks.")
         end
         new(typ, nPort, nPoint, impedance, frequency, data)
     end
