@@ -2,7 +2,7 @@ export Touchstone, read_touchstone
 """
 Touchstone data in its raw form, imported from a touchstone file `*.sNp`
 """
-mutable struct Touchstone
+struct Touchstone
     nPort::Int
     nPoint::Int
     impedance::Float64
