@@ -64,5 +64,6 @@ getindex(D::NetworkData{T}, I1::Tuple{Int, Int},
     error("Length of the mask different from lenghth of the array attemped to access")
 getindex(D::NetworkData{T}, I1::Tuple{Int, Int},
     I2::Colon) where {T<:NetworkParams} = getindex(D, I1, 1:D.nPoint)
-
+getindex(D::NetworkData{T}, I1::Tuple{Int, Int}) where {T<:NetworkParams} =
+    getindex(D, I1, :)
 # setindex!?
