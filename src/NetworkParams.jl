@@ -3,27 +3,24 @@ export TwoPortParams, ABCDparams
 
 abstract type NetworkParams end
 abstract type TwoPortParams <: NetworkParams end
-import Base.show
+
 
 """
     Sparams(nPort, data) <: NetworkParams
-Scattering parameters for microwave network
+Scattering parameters for microwave network. Contains a
 """
 mutable struct Sparams <: NetworkParams
     nPort::Int
     data::Array{Complex128, 2}
-    function Sparams(nPort, data)
+    function Sparams(data)
         nr, nc = size(data)
-        if (nr != nPort) | (nc != nPort)
-            error("Sparams Error: The number of ports doesn't match with either row or column of the data")
+        if nr != nc
+            error("Sparams Error: The number of rows and columns doesn't match")
+        else
+            new(nr, data)
         end
-        new(nPort, data)
     end
 end
-"""
-Convenience constructor for `Sparams`
-"""
-Sparams(data) = Sparams(size(data)[1], data)
 
 """
     Yparams(nPort, data) <: NetworkParams
@@ -34,16 +31,13 @@ mutable struct Yparams <: NetworkParams
     data::Array{Complex128, 2}
     function Yparams(nPort, data)
         nr, nc = size(data)
-        if (nr != nPort) | (nc != nPort)
-            error("Yparams Error: The number of ports doesn't match with either row or column of the data")
+        if nr != nc
+            error("Yparams Error: The number of rows and columns doesn't match")
+        else
+            new(nr, data)
         end
-        new(nPort, data)
     end
 end
-"""
-    Convenience constructor for `Yparams`
-"""
-Yparams(data) = Yparams(size(data)[1], data)
 
 """
     Zparams(nPort, data) <: NetworkParams
@@ -54,16 +48,13 @@ mutable struct Zparams <: NetworkParams
     data::Array{Complex128, 2}
     function Zparams(nPort, data)
         nr, nc = size(data)
-        if (nr != nPort) | (nc != nPort)
-            error("Zparams Error: The number of ports doesn't match with either row or column of the data")
+        if nr != nc
+            error("Zparams Error: The number of rows and columns doesn't match")
+        else
+            new(nr, data)
         end
-        new(nPort, data)
     end
 end
-"""
-    Convenience constructor for `Zparams`
-"""
-Zparams(data) = Zparams(size(data)[1], data)
 
 """
     ABCDparams(nPort, data) <: NetworkParams
@@ -73,21 +64,18 @@ mutable struct ABCDparams <: TwoPortParams
     nPort::Int
     data::Array{Complex128, 2}
     function ABCDparams(nPort, data)
-        if nPort != 2
-            error("ABCDparams Error: nPort must be equal to 2 for ABCDparams")
-        end
         nr, nc = size(data)
-        if (nr != nPort) | (nc != nPort)
-            error("ABCDparams Error: The number of ports doesn't match with either row or column of the data")
+        if nr != nc
+            error("ABCDparams Error: The number of rows and columns doesn't match")
+        else
+            if (nr!=2)|(nc!=2)
+                error("ABCDparams Error: the number of ports must be equal to 2")
+            else
+                new(nr, data)
+            end
         end
-        new(nPort, data)
     end
 end
-"""
-    Convenience constructor for `ABCDparams`
-"""
-ABCDparams(data) = ABCDparams(2, data)
-
 
 """
     show(io::IO, params::NetworkParams)

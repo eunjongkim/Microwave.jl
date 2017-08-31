@@ -1,18 +1,38 @@
-import Base: getindex, setindex!
+
+"""
+    p_counter()
+Global counter for unique port indices (has to be unique for each port)
+"""
+let
+    state = 0
+    global p_counter
+    p_counter() = state += 1
+end
+
+"""
+    Port(impedance::Float64)
+`indPort`: global index of the port. A port index unique in the system is
+assigned whenever an instance of `Port` is created.
+`impedance`: impedance of the port.
+"""
+struct Port
+    indPort::Int
+    impedance::Float64
+    Port(impedance) = new(p_counter(), impedance)
+end
 
 """
     NetworkData{T<:NetworkParams}
 """
 mutable struct NetworkData{T<:NetworkParams}
-    nPort::Int
-    nPoint::Int
-    port_impedance::Float64
+    ports::Array{Port, 1}
     frequency::Array{Float64, 1}
     params::Array{T, 1}
-    function NetworkData(nPort, nPoint, port_impedance, frequency,
-        params::Array{T,1}) where {T<:NetworkParams}
+    function NetworkData(ports::Array{Port, 1}, frequency, params::Array{T,1}) where {T<:NetworkParams}
+        nPoint = length(frequency)
+        nPort = length(ports)
         if (length(params) != nPoint) | (length(frequency) != nPoint)
-            error("NetworkData Error: the number of data points doesn't match with `nPoint`")
+            error("NetworkData Error: the number of data points doesn't match with number of frequency points")
         end
         if ~all(n -> (nPort == params[n].nPort), 1:nPoint)
             error("NetworkData Error: the number of ports in params doesn't match with `nPort`")
@@ -20,27 +40,34 @@ mutable struct NetworkData{T<:NetworkParams}
         # if (typeof(port_impedance) == Array{Float64, 1}) & (length(port_impedance) != nPort)
         #     error("The number of port impedances does not  match with `nPort`")
         # end
-        new{T}(nPort, nPoint, port_impedance, frequency, params)
+        new{T}(ports, frequency, params)
     end
 end
 
 """
-    NetworkData(frequency, params, port_impedance=50.0)
-Convenience constructor for creating a `NetworkData` object.
+    NetworkData(frequency, params; port_impedance=50.0)
+Convenience constructor for creating a `NetworkData` object of uniform port
+impedances.
 """
-function NetworkData(frequency, params, port_impedance=50.0)
+function NetworkData(frequency, params; impedance=50.0)
     nPoint = length(params)
     nPort = params[1].nPort
-    return NetworkData(nPort, nPoint, port_impedance, frequency, params)
+    return NetworkData([Port(impedance) for n in 1:nPort], frequency, params)
 end
 
 """
     show(io::IO, D::NetworkData{T}) where {T<:NetworkParams}
+Pretty-printing of `NetworkData`.
 """
 function show(io::IO, D::NetworkData{T}) where {T<:NetworkParams}
-    write(io, "$(D.nPort)-port $(typeof(D)):\n")
-    write(io, "\tPort impedance = $(D.port_impedance),\n")
-    write(io, "\tNumber of datapoints = $(D.nPoint)")
+    nPort = length(D.ports)
+    nPoint = length(D.frequency)
+    write(io, "$(nPort)-port $(typeof(D)):\n")
+    write(io, "\tNumber of datapoints = $(nPoint)\n")
+    write(io, "\tPort Informaton:\n")
+    for (n, p) in enumerate(D.ports)
+        write(io, "\t\tPort $(n) → (global index = $(p.indPort), Z₀ = $(p.impedance))\n")
+    end
 end
 
 """
@@ -59,11 +86,11 @@ getindex(D::NetworkData{T}, I1::Tuple{Int, Int},
     I2::Vector) where {T<:NetworkParams} =
     [D.params[n].data[I1...] for n in I2]
 getindex(D::NetworkData{T}, I1::Tuple{Int, Int},
-    I2::Vector{Bool}) where {T<:NetworkParams} = (D.nPoint == length(I2))?
+    I2::Vector{Bool}) where {T<:NetworkParams} = (length(D.params) == length(I2))?
     [D.params[n].data[I1...] for n in Base.LogicalIndex(I2)]:
     error("Length of the mask different from lenghth of the array attemped to access")
 getindex(D::NetworkData{T}, I1::Tuple{Int, Int},
-    I2::Colon) where {T<:NetworkParams} = getindex(D, I1, 1:D.nPoint)
+    I2::Colon) where {T<:NetworkParams} = getindex(D, I1, 1:length(D.params))
 getindex(D::NetworkData{T}, I1::Tuple{Int, Int}) where {T<:NetworkParams} =
     getindex(D, I1, :)
-# setindex!?
+# setindex!: TODO
