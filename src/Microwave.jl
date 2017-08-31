@@ -3,10 +3,14 @@ module Microwave
 # Author: Eunjong Kim
 import Base: +, -, *, ^, convert, show
 
-include("Network.jl")
+# Definitions of NetworkParams, NetworkData
+include("NetworkParams.jl")
+include("NetworkData.jl")
+# Touchstone (*.sNp) format
 include("Touchstone.jl")
+# Conversion between different NetworkParams
 include("convert.jl")
-include("operations.jl")
-
+# Connection between NetworkData
+include("connect.jl")
 
 end # module
