@@ -194,12 +194,12 @@ function _S_to_ABCD(S::NetworkData{Sparams})
     end
     nPoint = S.nPoint
     freq = S.frequency
-    Z₀ = S.impedance
+    Z₀ = S.port_impedance
 
     ABCD = zeros(Complex128, (2, 2, nPoint))    # converting S-parameters into ABCD parameters
     for n in 1:nPoint
-        (S11, S12, S21, S22) = (S.data[1, 1, n], S.data[1, 2, n],
-            S.data[2, 1, n], S.data[2, 2, n])
+        (S11, S12, S21, S22) = (S[(1, 1), n], S[(1, 2), n],
+            S[(2, 1), n], S[(2, 2), n])
         ABCD[1, 1, n] = ((1 + S11) * (1 - S22) + S12 * S21) / (2 * S21)
         ABCD[1, 2, n] = Z₀ * ((1 + S11) * (1 + S22) - S12 * S21) / (2 * S21)
         ABCD[2, 1, n] = 1 / Z₀ * ((1 - S11) * (1 - S22) - S12 * S21) / (2 * S21)
