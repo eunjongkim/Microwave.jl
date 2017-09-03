@@ -69,7 +69,6 @@ convert(::Type{NetworkData{Sparams}}, Z::NetworkData{Zparams}) =
     _Z_to_S(Z)
 convert(::Type{NetworkData{Sparams}}, Y::NetworkData{Yparams}) =
     _Y_to_S(Y)
-
 convert(::Type{NetworkData{Zparams}}, Y::NetworkData{Yparams}) =
     NetworkData(Y.ports, Y.frequency,
         [Zparams(inv(Y.params[n].data)) for n in 1:Y.nPoint])
@@ -78,9 +77,11 @@ convert(::Type{NetworkData{Yparams}}, Z::NetworkData{Zparams}) =
     NetworkData(Z.ports, Z.frequency,
         [Yparams(inv(Z.params[n].data)) for n in 1:Z.nPoint])
 
+"""
+Helper matrices related to reference impedances
+"""
 Z_ref(ports::Array{Port, 1}) = diagm(impedances(ports), 0)
 Z_ref(D::NetworkData) = _Z_ref(D.ports)
-
 G_ref(ports::Array{Port, 1}) = diagm(1./sqrt.(abs.(impedances(ports))), 0)
 G_ref(D::NetworkData) = _G_ref(D.ports)
 
@@ -140,7 +141,7 @@ Conversion from ABCD-parameters to S-parameters
 function _ABCD_to_S(ABCD::NetworkData{ABCDparams})
     Z₀ = impedances(ABCD)[1]
     S = Vector{Sparams}(length(ABCD.params))
-    # converting abcd matrix into scattering matrix
+    # converting ABCD matrix into scattering matrix
     for n in 1:ABCD.nPoint
         (A, B, C, D) = (ABCD[(1, 1), n], ABCD[(1, 2), n],
             ABCD[(2, 1), n], ABCD[(2, 2), n])
@@ -160,7 +161,7 @@ function _S_to_ABCD(S::NetworkData{Sparams})
     if S.nPort != 2
         error("Error: ABCD-parameters are defined only for 2-port networks")
     end
-    if impedances(S)[1] != impedances(S)[2]
+    if S.is_uniform == false
         error("Error: The port impedances of a ABCDparams must be uniform")
     end
     Z₀ = impedances(S)[1]
