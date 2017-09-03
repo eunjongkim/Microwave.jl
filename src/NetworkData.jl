@@ -25,6 +25,8 @@ end
     NetworkData{T<:NetworkParams}
 """
 mutable struct NetworkData{T<:NetworkParams}
+    nPort::Int
+    nPoint::Int
     ports::Array{Port, 1}
     frequency::Array{Float64, 1}
     params::Array{T, 1}
@@ -37,10 +39,16 @@ mutable struct NetworkData{T<:NetworkParams}
         if ~all(n -> (nPort == params[n].nPort), 1:nPoint)
             error("NetworkData Error: the number of ports in params doesn't match with `nPort`")
         end
-        # if (typeof(port_impedance) == Array{Float64, 1}) & (length(port_impedance) != nPort)
-        #     error("The number of port impedances does not  match with `nPort`")
-        # end
-        new{T}(ports, frequency, params)
+        if T<:TwoPortParams
+            # This tested by inner constructor for TwoPortParams
+            # if nPort != 2
+            #     error("TwoPortParams Error: the number of ports must be equal to 2 for `TwoPortParams`")
+            # end
+            if ports[1].impedance != ports[2].impedance
+                error("TwoPortParams Error: the impedances of two ports must be equal for `TwoPortParams`")
+            end
+        end
+        new{T}(nPort, nPoint, ports, frequency, params)
     end
 end
 
@@ -49,26 +57,24 @@ end
 Convenience constructor for creating a `NetworkData` object of uniform port
 impedances.
 """
-function NetworkData(frequency, params; impedance=50.0)
-    nPoint = length(params)
-    nPort = params[1].nPort
-    return NetworkData([Port(impedance) for n in 1:nPort], frequency, params)
-end
+NetworkData(frequency, params; impedance=50.0) =
+    NetworkData([Port(impedance) for n in 1:params[1].nPort], frequency, params)
 
 """
     show(io::IO, D::NetworkData{T}) where {T<:NetworkParams}
 Pretty-printing of `NetworkData`.
 """
 function show(io::IO, D::NetworkData{T}) where {T<:NetworkParams}
-    nPort = length(D.ports)
-    nPoint = length(D.frequency)
-    write(io, "$(nPort)-port $(typeof(D)):\n")
-    write(io, "\tNumber of datapoints = $(nPoint)\n")
+    write(io, "$(D.nPort)-port $(typeof(D)):\n")
+    write(io, "\tNumber of datapoints = $(D.nPoint)\n")
     write(io, "\tPort Informaton:\n")
     for (n, p) in enumerate(D.ports)
         write(io, "\t\tPort $(n) → (global index = $(p.indPort), Z₀ = $(p.impedance))\n")
     end
 end
+
+impedances(ports::Array{Port, 1}) = [p.impedance for p in ports]
+impedances(D::NetworkData) = impedances(D.ports)
 
 """
 `getindex` methods for `NetworkData{T<:NetworkParams}`. The first input argument

@@ -8,8 +8,8 @@ include("NetworkParams.jl")
 include("NetworkData.jl")
 # Touchstone (*.sNp) format
 # include("Touchstone.jl")
-# # Conversion between different NetworkParams
-# include("convert.jl")
+# Conversion between different NetworkParams
+include("convert.jl")
 # # Connection between NetworkData
 # include("connect.jl")
 
