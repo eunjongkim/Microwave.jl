@@ -1,11 +1,12 @@
+export Port, NetworkData, impedances, swapPorts!
 
-"""
-    p_counter()
-Global counter for unique port indices (has to be unique for each port)
-"""
 let
     state = 0
     global p_counter
+    """
+        p_counter()
+    Global counter for unique port indices (has to be unique for each port)
+    """
     p_counter() = state += 1
 end
 
@@ -17,7 +18,7 @@ assigned whenever an instance of `Port` is created.
 """
 struct Port
     indPort::Int
-    impedance::Float64
+    impedance::Complex128
     Port(impedance) = new(p_counter(), impedance)
 end
 
@@ -27,28 +28,37 @@ end
 mutable struct NetworkData{T<:NetworkParams}
     nPort::Int
     nPoint::Int
+    is_uniform::Bool
     ports::Array{Port, 1}
     frequency::Array{Float64, 1}
     params::Array{T, 1}
-    function NetworkData(ports::Array{Port, 1}, frequency, params::Array{T,1}) where {T<:NetworkParams}
+    function NetworkData(ports::Array{Port, 1}, frequency,
+        params::Array{T,1}) where {T<:NetworkParams}
         nPoint = length(frequency)
         nPort = length(ports)
+        Z₀₁ = ports[1].impedance
+        if all(n -> (Z₀₁ == ports[n].impedance), 1:nPort)
+            is_uniform = true
+        else
+            is_uniform = false
+        end
         if (length(params) != nPoint) | (length(frequency) != nPoint)
             error("NetworkData Error: the number of data points doesn't match with number of frequency points")
         end
         if ~all(n -> (nPort == params[n].nPort), 1:nPoint)
             error("NetworkData Error: the number of ports in params doesn't match with `nPort`")
         end
+
         if T<:TwoPortParams
             # This tested by inner constructor for TwoPortParams
             # if nPort != 2
             #     error("TwoPortParams Error: the number of ports must be equal to 2 for `TwoPortParams`")
             # end
-            if ports[1].impedance != ports[2].impedance
-                error("TwoPortParams Error: the impedances of two ports must be equal for `TwoPortParams`")
+            if is_uniform == false
+                error("TwoPortParams Error: two-port parameters are defined only for uniform port impedances")
             end
         end
-        new{T}(nPort, nPoint, ports, frequency, params)
+        new{T}(nPort, nPoint, is_uniform, ports, frequency, params)
     end
 end
 
@@ -100,3 +110,19 @@ getindex(D::NetworkData{T}, I1::Tuple{Int, Int},
 getindex(D::NetworkData{T}, I1::Tuple{Int, Int}) where {T<:NetworkParams} =
     getindex(D, I1, :)
 # setindex!: TODO
+
+function swapPorts!(D::NetworkData{T}, i1::Int, i2::Int) where {T<:NetworkParams}
+    D.ports[i1], D.ports[i2] = D.ports[i2], D.ports[i1]
+    for n in 1:D.nPoint
+        # swap rows
+        D.params[n].data[i1, :], D.params[n].data[i2, :] =
+            D.params[n].data[i2, :], D.params[n].data[i1, :]
+        # swap columns
+        D.params[n].data[:, i1], D.params[n].data[:, i2] =
+            D.params[n].data[:, i2], D.params[n].data[:, i1]
+    end
+    return D
+end
+
+swapPorts(D::NetworkData{T}, i1::Int, i2::Int) where {T<:NetworkParams} =
+    swapPorts!(deepcopy(_D), i1, i2)
