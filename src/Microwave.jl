@@ -12,6 +12,6 @@ include("NetworkData.jl")
 # Conversion between different NetworkParams
 include("convert.jl")
 # # Connection between NetworkData
-# include("connect.jl")
+include("connect.jl")
 
 end # module
