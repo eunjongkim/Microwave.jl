@@ -55,16 +55,36 @@ Method for
 terminate{T<:NetworkParams, S<:NetworkParams}(s::NetworkData{T},
     t::NetworkData{S}) = terminate(convert(Sparams, s), convert(Sparams, t))
 
-function interconnect(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
-    
+function connect(ntwkA::NetworkData{T}, k::Int,
+    ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
+    ZA, ZB = impedances(ntwkA), impedances(ntwkB)
+    ntwkA_S, ntwkB_S = (convert(NetworkData{Sparams}, ntwkA),
+        convert(NetworkData{Sparams}, ntwkB))
+
+    if ZA[k] != ZB[l]
+
+    else
+        return _connect_S(ntwkA, k, ntwkB, l)
+    end
+end
+
+function innerconnect(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
+    k, l = sort([k, l])
     Z = impedances(ntwk)
+    nPort = ntwk.nPort
     ntwk_S = convert(NetworkData{Sparams}, ntwk)
     if Z[k] != Z[l]
-        mismatch = NetworkData([ntwk.ports[k], ntwk.ports[l]], ntwk.frequency,
+        stepNetwork = NetworkData([ntwk.ports[k], ntwk.ports[l]], ntwk.frequency,
             [impedance_step(Z[k], Z[l]) for n in 1:ntwk.nPoint])
-        return interconnect(_connect_S(ntwk_S, k, mismatch, 1)
+        ntwk_S_matched = _connect_S(ntwk_S, k, stepNetwork, 1)
+        # _connect_S function moves the k-th port to the nPort-th port. Need to
+        # permute indices such that the k-th port impedance-matched to the l-th
+        # port is located at index k.
+        I_before, I_after = vcat(nPort, k:(nPort-1)), collect(k:nPort)
+        permutePorts!(ntwk_S_matched, I_before, I_after)
+        return innerconnect(ntwk_S_matched, k, l)
     else
-        return _interconnect_S(ntwk_S, k, l)
+        return _innerconnect_S(ntwk_S, k, l)
     end
 end
 
@@ -74,18 +94,18 @@ impedance_step(Z1, Z2) =
     Sparams([reflection_coefficient(Z1, Z2) transmission_coefficient(Z2, Z1);
         transmission_coefficient(Z1, Z2) reflection_coefficient(Z2, Z1)])
 """
-Interconnect two ports (assumed to have same port impedances) of a single n-port
-Sparameter network:
+innerconnect two ports (assumed to have same port impedances) of a single n-port
+S-parameter network:
 
               Sₖⱼ Sᵢₗ (1 - Sₗₖ) + Sₗⱼ Sᵢₖ (1 - Sₖₗ) + Sₖⱼ Sₗₗ Sᵢₖ + Sₗⱼ Sₖₖ Sᵢₗ
 S′ᵢⱼ = Sᵢⱼ + ----------------------------------------------------------
                             (1 - Sₖₗ) (1 - Sₗₖ) - Sₖₖ Sₗₗ
 """
-function _interconnect_S(ntwk::NetworkData{Sparams}, k::Int, l::Int)
+function _innerconnect_S(ntwk::NetworkData{Sparams}, k::Int, l::Int)
     k, l = sort([k, l])
     nPort, nPoint = ntwk.nPort, ntwk.nPoint
     ports = deepcopy(ntwk.ports)
-    deleteat!(ports, [k, l])  # remove ports that are interconnected
+    deleteat!(ports, [k, l])  # remove ports that are innerconnected
     params = Vector{Sparams}(nPoint)
     newind = vcat(1:(k-1), (k+1):(l-1), (l+1):nPort)
     for n in 1:nPoint
@@ -121,5 +141,5 @@ function _connect_S(A::NetworkData{Sparams}, k::Int,
         tmp[(nA+1):(nA+nB), (nA+1):(nA+nB)] = B.params[n].data
         params[n] = Sparams(tmp)
     end
-    return _interconnect_S(NetworkData(ports, A.frequency, params), k, nA + l)
+    return _innerconnect_S(NetworkData(ports, A.frequency, params), k, nA + l)
 end
