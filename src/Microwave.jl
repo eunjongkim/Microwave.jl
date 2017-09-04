@@ -3,6 +3,7 @@ module Microwave
 # Author: Eunjong Kim
 import Base: +, -, *, ^, convert, show, getindex, setindex!
 
+using Touchstone
 # Definitions of NetworkParams, NetworkData
 include("NetworkParams.jl")
 include("NetworkData.jl")
