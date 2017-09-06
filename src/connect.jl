@@ -1,10 +1,5 @@
 export connect, innerconnect, cascade
 
-reflection_coefficient(Z1, Z2) = (Z2 - Z1) / (Z2 + Z1)
-transmission_coefficient(Z1, Z2) = 1 + reflection_coefficient(Z1, Z2)
-impedance_step(Z1, Z2) =
-    Sparams([reflection_coefficient(Z1, Z2) transmission_coefficient(Z2, Z1);
-        transmission_coefficient(Z1, Z2) reflection_coefficient(Z2, Z1)])
 
 check_frequency_identical(ntwkA::NetworkData{T},
     ntwkB::NetworkData{S}) where {T<:NetworkParams, S<:NetworkParams} =
@@ -52,7 +47,6 @@ function innerconnect(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkPar
         return _innerconnect_S(ntwk_S, k, l)
     end
 end
-
 
 """
 innerconnect two ports (assumed to have same port impedances) of a single n-port
@@ -103,30 +97,6 @@ function _connect_S(A::NetworkData{Sparams}, k::Int,
         params[n] = Sparams(tmp)
     end
     return _innerconnect_S(NetworkData(ports, A.frequency, params), k, nA + l)
-end
-
-
-function *(M1::NetworkData{ABCDparams}, M2::NetworkData{ABCDparams})
-    if (M1.frequency == M2.frequency) & (M1.impedance == M2.impedance)
-        nPoint = M1.nPoint
-        M = zeros(Complex128, (2, 2, nPoint))
-        for n in 1:nPoint
-            M[:, :, n] = M1.data[:, :, n] * M2.data[:, :, n]
-        end
-        return NetworkData(ABCDparams, 2, nPoint, M1.impedance, M1.frequency, M)
-    else
-        return error("Operations between data of different
-            frequencies or characteristic impedances not supported")
-    end
-end
-
-function ^(ABCD::NetworkData{ABCDparams}, N::Int)
-    nPoint = ABCD.nPoint
-    ABCDᴺ_data = zeros(Complex128, (2, 2, nPoint))
-    for n in 1:nPoint
-        ABCDᴺ_data[:, :, n] = ABCD.data[:, :, n] ^ N
-    end
-    return NetworkData(ABCDparams, 2, nPoint, ABCD.impedance, ABCD.frequency, ABCDᴺ_data)
 end
 
 """
