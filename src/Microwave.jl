@@ -3,7 +3,7 @@ module Microwave
 # Author: Eunjong Kim
 import Base: +, -, *, ^, convert, show, getindex, setindex!
 
-using Touchstone
+#using Touchstone
 # Definitions of NetworkParams, NetworkData
 include("NetworkParams.jl")
 include("NetworkData.jl")
@@ -18,8 +18,7 @@ check_two_port(ntwk::NetworkData{T}) where {T<:NetworkParams} =
     (ntwk.nPort == 2)
 check_is_uniform(ntwk::NetworkData{T}) where {T<:NetworkParams} =
     (ntwk.is_uniform == true)
-# Touchstone (*.sNp) format
-# include("Touchstone.jl")
+include("Touchstone.jl")
 # Conversion between different NetworkParams
 include("convert.jl")
 # # Connection between NetworkData

@@ -66,7 +66,7 @@ function _innerconnect_S(ntwk::NetworkData{Sparams}, k::Int, l::Int)
     for n in 1:nPoint
         tmp = zeros(Complex128, (nPort, nPort))
         S = ntwk.params[n].data
-        for i in newind, j in 1:newind
+        for i in newind, j in newind
             tmp[i, j] = S[i, j] +
                 (S[k, j] * S[i, l] * (1 - S[l, k]) +
                  S[l, j] * S[i, k] * (1 - S[k, l]) +
@@ -91,7 +91,7 @@ function _connect_S(A::NetworkData{Sparams}, k::Int,
     # Create a supernetwork containing `A` and `B`
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex128, (nPort, nPort))
+        tmp = zeros(Complex128, (nA+nB, nA+nB))
         tmp[1:nA, 1:nA] = A.params[n].data
         tmp[(nA+1):(nA+nB), (nA+1):(nA+nB)] = B.params[n].data
         params[n] = Sparams(tmp)
@@ -102,31 +102,8 @@ end
 """
 Cascade a 2-port touchstone data `Data::NetworkData{T}` `N::Int` times
 """
-cascade(Data::NetworkData{T}, N::Int) where {T<:TwoPortParams} =
-    convert(T, convert(ABCDparams, Data) ^ N)
+cascade(ntwk::NetworkData{ABCDparams}, N::Int) =
+    NetworkData(ntwk.ports, ntwk.frequency, [p^N for p in ntwk.params])
 
-"""
-Terminate port 2 of a two-port network `s::NetworkData{Sparams}`
-with a one-port touchstone data `t::NetworkData{Sparams, 1}`
-
-s₁₁′ = s₁₁ + s₂₁t₁₁s₁₂ / (1 - t₁₁s₂₂)
-"""
-function terminate(s::NetworkData{Sparams}, t::NetworkData{Sparams})
-    if (s.nPort != 2) | (t.nPort != 1)
-        error("Supported only for the case of a two-port network terminated by a one-port network")
-    end
-    if (s.frequency != t.frequency) | (s.impedance != t.impedance)
-        error("Operations between data of different
-            frequencies or characteristic impedances not supported")
-    end
-
-    s′_data = zeros(Complex128, (1, 1, s.nPoint))
-    s′_data[1, 1, :] = (s.data[1, 1, :] + s.data[2, 1, :] .* t.data[1, 1, :]
-        .* s.data[1, 2, :] ./ (1 - t.data[1, 1, :] .* s.data[2, 2, :]))
-    return NetworkData(Sparams, 1, s.nPoint, s.impedance, s.frequency, s′_data)
-end
-"""
-Method for
-"""
-terminate{T<:NetworkParams, S<:NetworkParams}(s::NetworkData{T},
-    t::NetworkData{S}) = terminate(convert(Sparams, s), convert(Sparams, t))
+cascade(ntwk::NetworkData{T}, N::Int) where {T<:NetworkParams} =
+    convert(T, cascade(convert(ABCDparams, ntwk), N))
