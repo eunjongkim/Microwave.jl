@@ -72,7 +72,7 @@ function _innerconnect_S(ntwk::NetworkData{Sparams}, k::Int, l::Int)
     for n in 1:nPoint
         tmp = zeros(Complex128, (nPort, nPort))
         S = ntwk.params[n].data
-        for i in newind, j in 1:newind
+        for i in newind, j in newind
             tmp[i, j] = S[i, j] +
                 (S[k, j] * S[i, l] * (1 - S[l, k]) +
                  S[l, j] * S[i, k] * (1 - S[k, l]) +
@@ -97,7 +97,7 @@ function _connect_S(A::NetworkData{Sparams}, k::Int,
     # Create a supernetwork containing `A` and `B`
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex128, (nPort, nPort))
+        tmp = zeros(Complex128, (nA+nB, nA+nB))
         tmp[1:nA, 1:nA] = A.params[n].data
         tmp[(nA+1):(nA+nB), (nA+1):(nA+nB)] = B.params[n].data
         params[n] = Sparams(tmp)
@@ -109,4 +109,7 @@ end
 Cascade a 2-port touchstone data `Data::NetworkData{T}` `N::Int` times
 """
 cascade(ntwk::NetworkData{ABCDparams}, N::Int) =
-    NetworkData(ntwk.ports, ntwk.frequency, [param^N for param in ntwk.params])
+    NetworkData(ntwk.ports, ntwk.frequency, [p^N for p in ntwk.params])
+
+cascade(ntwk::NetworkData{T}, N::Int) where {T<:NetworkParams} =
+    convert(T, cascade(convert(ABCDparams, ntwk), N))

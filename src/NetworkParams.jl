@@ -29,7 +29,7 @@ Admittance-parameters for microwave network
 mutable struct Yparams <: NetworkParams
     nPort::Int
     data::Array{Complex128, 2}
-    function Yparams(nPort, data)
+    function Yparams(data)
         nr, nc = size(data)
         if nr != nc
             error("Yparams Error: The number of rows and columns doesn't match")
@@ -46,7 +46,7 @@ Impedance-parameters for microwave network
 mutable struct Zparams <: NetworkParams
     nPort::Int
     data::Array{Complex128, 2}
-    function Zparams(nPort, data)
+    function Zparams(data)
         nr, nc = size(data)
         if nr != nc
             error("Zparams Error: The number of rows and columns doesn't match")
@@ -63,7 +63,7 @@ Transfer-parameters for microwave network
 mutable struct ABCDparams <: TwoPortParams
     nPort::Int
     data::Array{Complex128, 2}
-    function ABCDparams(nPort, data)
+    function ABCDparams(data)
         nr, nc = size(data)
         if nr != nc
             error("ABCDparams Error: The number of rows and columns doesn't match")
@@ -115,4 +115,4 @@ function *(param1::T, param2::T) where {T<:NetworkParams}
     end
 end
 
-^(param::T, N::Int) where {T<:NetworkParams} = T((param.data)^N)
+^(param::T, N::Int) where {T<:NetworkParams} = T(^(param.data,N))
