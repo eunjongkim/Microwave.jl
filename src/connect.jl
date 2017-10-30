@@ -1,4 +1,4 @@
-export connect, innerconnect, cascade
+export connect_ports, innerconnect_ports, cascade
 
 reflection_coefficient(Z1, Z2) = (Z2 - Z1) / (Z2 + Z1)
 transmission_coefficient(Z1, Z2) = 1 + reflection_coefficient(Z1, Z2)
@@ -14,31 +14,31 @@ check_port_impedance_identical(ntwkA::NetworkData{T}, k,
     ntwkB::NetworkData{S}, l) where {T<:NetworkParams, S<:NetworkParams} =
     (ntwkA.ports[k].impedance == ntwkA.ports[k].impedance)
 
-function connect(ntwkA::NetworkData{T}, k::Int,
+function connect_ports(ntwkA::NetworkData{T}, k::Int,
     ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
     ZA, ZB = impedances(ntwkA), impedances(ntwkB)
     ntwkA_S, ntwkB_S = (convert(NetworkData{Sparams}, ntwkA),
         convert(NetworkData{Sparams}, ntwkB))
 
-    if ~check_port_impedance_identical(ntwkA_S, k, ntwkB_S, l)
+    if ~ check_port_impedance_identical(ntwkA_S, k, ntwkB_S, l)
         stepNetwork = NetworkData([ntwkA_S.ports[k], ntwkB_S.ports[l]],
             ntwkA_S.frequency, [impedance_step(ZA[k], ZB[l]) for n in 1:ntwkA_S.nPoint])
         ntwkA_S_matched = _connect_S(ntwkA_S, k, stepNetwork, 1)
         # renumbering of ports after attaching impedance step
         I_before, I_after = vcat(ntwkA.nPort, k:(ntwkA.nPort-1)), collect(k:(ntwkA.nPort))
         permutePorts!(ntwkA_S_matched, I_before, I_after)
-        return connect(ntwkA_S_matched, k, ntwkB_S, l)
+        return connect_ports(ntwkA_S_matched, k, ntwkB_S, l)
     else
         return _connect_S(ntwkA_S, k, ntwkB_S, l)
     end
 end
 
-function innerconnect(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
+function innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
     k, l = sort([k, l])
     Z = impedances(ntwk)
     nPort = ntwk.nPort
     ntwk_S = convert(NetworkData{Sparams}, ntwk)
-    if ~check_port_impedance_identical(ntwk_S, k, ntwk_S, l)
+    if ~ check_port_impedance_identical(ntwk_S, k, ntwk_S, l)
         stepNetwork = NetworkData([ntwk.ports[k], ntwk.ports[l]], ntwk.frequency,
             [impedance_step(Z[k], Z[l]) for n in 1:ntwk.nPoint])
         ntwk_S_matched = _connect_S(ntwk_S, k, stepNetwork, 1)
@@ -47,7 +47,7 @@ function innerconnect(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkPar
         # port is located at index k.
         I_before, I_after = vcat(nPort, k:(nPort-1)), collect(k:nPort)
         permutePorts!(ntwk_S_matched, I_before, I_after)
-        return innerconnect(ntwk_S_matched, k, l)
+        return innerconnect_ports(ntwk_S_matched, k, l)
     else
         return _innerconnect_S(ntwk_S, k, l)
     end
@@ -86,12 +86,14 @@ function _innerconnect_S(ntwk::NetworkData{Sparams}, k::Int, l::Int)
 end
 
 """
-Connect two
+Connect two network data specified by S parameters.
 """
 function _connect_S(A::NetworkData{Sparams}, k::Int,
     B::NetworkData{Sparams}, l::Int)
     nA, nB = A.nPort, B.nPort
-    nPoint = (A.frequency == B.frequency)? A.nPoint : error("")
+    nPoint = A.nPoint
+    # nPoint = check_frequency_identical(A, B)?
+    #     A.nPoint : error("Frequency Error: The frequency points of two network data doesn't match")
     portsA, portsB = deepcopy(A.ports), deepcopy(B.ports)
     ports = vcat(portsA, portsB)
     # Create a supernetwork containing `A` and `B`
