@@ -26,7 +26,7 @@ function connect_ports(ntwkA::NetworkData{T}, k::Int,
         ntwkA_S_matched = _connect_S(ntwkA_S, k, stepNetwork, 1)
         # renumbering of ports after attaching impedance step
         I_before, I_after = vcat(ntwkA.nPort, k:(ntwkA.nPort-1)), collect(k:(ntwkA.nPort))
-        permutePorts!(ntwkA_S_matched, I_before, I_after)
+        permute_ports!(ntwkA_S_matched, I_before, I_after)
         return connect_ports(ntwkA_S_matched, k, ntwkB_S, l)
     else
         return _connect_S(ntwkA_S, k, ntwkB_S, l)
@@ -46,7 +46,7 @@ function innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:Netw
         # permute indices such that the k-th port impedance-matched to the l-th
         # port is located at index k.
         I_before, I_after = vcat(nPort, k:(nPort-1)), collect(k:nPort)
-        permutePorts!(ntwk_S_matched, I_before, I_after)
+        permute_ports!(ntwk_S_matched, I_before, I_after)
         return innerconnect_ports(ntwk_S_matched, k, l)
     else
         return _innerconnect_S(ntwk_S, k, l)
@@ -91,9 +91,8 @@ Connect two network data specified by S parameters.
 function _connect_S(A::NetworkData{Sparams}, k::Int,
     B::NetworkData{Sparams}, l::Int)
     nA, nB = A.nPort, B.nPort
-    nPoint = A.nPoint
-    # nPoint = check_frequency_identical(A, B)?
-    #     A.nPoint : error("Frequency Error: The frequency points of two network data doesn't match")
+    nPoint = check_frequency_identical(A, B)?
+         A.nPoint : error("Frequency Error: The frequency points of two network data doesn't match")
     portsA, portsB = deepcopy(A.ports), deepcopy(B.ports)
     ports = vcat(portsA, portsB)
     # Create a supernetwork containing `A` and `B`

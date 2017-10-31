@@ -1,5 +1,7 @@
 using Interpolations
 
+export interpolate_network
+
 function interpolate_network(ntwk::NetworkData{T}, freq) where {T<:NetworkParams}
     nPort = ntwk.nPort
     d = []
