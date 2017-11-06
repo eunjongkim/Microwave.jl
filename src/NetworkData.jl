@@ -1,4 +1,4 @@
-export Port, NetworkData, impedances, swapPorts!
+export Port, NetworkData, impedances, swap_ports!, permute_ports!
 
 let
     state = 0
@@ -114,7 +114,7 @@ getindex(D::NetworkData{T}, I1::Tuple{Int, Int}) where {T<:NetworkParams} =
 """
 Permute port indices
 """
-function permutePorts!(D::NetworkData{T}, I_before::Vector{Int},
+function permute_ports!(D::NetworkData{T}, I_before::Vector{Int},
     I_after::Vector{Int}) where {T<:NetworkParams}
     if length(unique(I_before)) != length(I_before)
         error("Error: The indices contained in `I_before` must be unique")
@@ -135,11 +135,11 @@ function permutePorts!(D::NetworkData{T}, I_before::Vector{Int},
     return D
 end
 
-permutePorts(D::NetworkData{T}, I_before::Vector{Int},
+permute_ports(D::NetworkData{T}, I_before::Vector{Int},
     I_after::Vector{Int}) where {T<:NetworkParams} =
-    permutePorts!(deepcopy(D), I_before, I_after)
+    permute_ports!(deepcopy(D), I_before, I_after)
 
-swapPorts!(D::NetworkData{T}, i1::Int, i2::Int) where {T<:NetworkParams} =
+swap_ports!(D::NetworkData{T}, i1::Int, i2::Int) where {T<:NetworkParams} =
     permutePorts!(D, [i1, i2], [i2, i1])
-swapPorts(D::NetworkData{T}, i1::Int, i2::Int) where {T<:NetworkParams} =
-    swapPorts!(deepcopy(D), i1, i2)
+swap_ports(D::NetworkData{T}, i1::Int, i2::Int) where {T<:NetworkParams} =
+    swap_ports!(deepcopy(D), i1, i2)

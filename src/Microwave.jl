@@ -21,7 +21,9 @@ check_is_uniform(ntwk::NetworkData{T}) where {T<:NetworkParams} =
 include("Touchstone.jl")
 # Conversion between different NetworkParams
 include("convert.jl")
-# # Connection between NetworkData
+# interpolate NetworkData
+include("interpolate.jl")
+# Connection between NetworkData
 include("connect.jl")
 
 end # module
