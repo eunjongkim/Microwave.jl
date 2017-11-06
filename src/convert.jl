@@ -1,4 +1,4 @@
-# convert(any-params, data) = convert(NetworkData{any-params}, data)
+Complex{BigFloat}# convert(any-params, data) = convert(NetworkData{any-params}, data)
 convert(::Type{T}, D::NetworkData{S}) where {T<:NetworkParams, S<:NetworkParams} =
     convert(NetworkData{T}, D)
 convert(::Type{T}, D::Touchstone) where {T<:NetworkParams} =
@@ -51,7 +51,7 @@ end
 function __touchstone_sparams_ri(nPort, nPoint, data)
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex128, (nPort, nPort))
+        tmp = zeros(Complex{BigFloat}, (nPort, nPort))
         for i in 1:nPort, j in 1:nPort
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
@@ -65,7 +65,7 @@ end
 function __touchstone_sparams_ma(nPort, nPoint, data)
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex128, (nPort, nPort))
+        tmp = zeros(Complex{BigFloat}, (nPort, nPort))
         for i in 1:nPort, j in 1:nPort
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
@@ -79,7 +79,7 @@ end
 function __touchstone_sparams_db(nPort, nPoint, data)
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex128, (nPort, nPort))
+        tmp = zeros(Complex{BigFloat}, (nPort, nPort))
         for i in 1:nPort, j in 1:nPort
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
@@ -113,15 +113,15 @@ convert(::Type{NetworkData{Yparams}}, Z::NetworkData{Zparams}) =
 Helper matrices related to reference impedances
 """
 Z_ref(ports::Array{Port, 1}) = diagm(impedances(ports), 0)
-Z_ref(D::NetworkData) = _Z_ref(D.ports)
+Z_ref(D::NetworkData) = Z_ref(D.ports)
 G_ref(ports::Array{Port, 1}) = diagm(1./sqrt.(abs.(impedances(ports))), 0)
-G_ref(D::NetworkData) = _G_ref(D.ports)
+G_ref(D::NetworkData) = G_ref(D.ports)
 
 """
 Conversion from S-parameters to Z-parameters
 """
 function _S_to_Z(S::NetworkData{Sparams})
-    E = eye(Complex128, S.nPort)
+    E = eye(Complex{BigFloat}, S.nPort)
     _Z_ref, _G_ref = Z_ref(S), G_ref(S)
     params = [Zparams(inv(_G_ref) * inv(E - S.params[n].data) *
         (E + S.params[n].data) * _Z_ref * _G_ref) for n in 1:S.nPoint]
@@ -132,7 +132,7 @@ end
 Conversion from S-parameters to Y-parameters
 """
 function _S_to_Y(S::NetworkData{Sparams})
-    E = eye(Complex128, S.nPort)
+    E = eye(Complex{BigFloat}, S.nPort)
     _Z_ref, _G_ref = Z_ref(S), G_ref(S)
     params = [Yparams(inv(_G_ref) * inv(_Z_ref) *
         inv(E + S.params[n].data) * (E - S.params[n].data) *
@@ -154,7 +154,7 @@ end
 Conversion from Y-parameters to S-parameters
 """
 function _Y_to_S(Y::NetworkData{Yparams})
-    E = eye(Complex128, Y.nPort)
+    E = eye(Complex{BigFloat}, Y.nPort)
     _Z_ref, _G_ref = Z_ref(Y), G_ref(Y)
     params = [Sparams(_G_ref * (E - _Z_ref * Y.params[n].data) *
         inv(E + _Z_ref * Y.params[n].data) * inv(_G_ref)) for n in 1:Y.nPoint]
