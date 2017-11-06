@@ -1,11 +1,12 @@
 module Microwave
 # Microwave.jl
 # Author: Eunjong Kim
-import Base: +, -, *, ^, convert, show, getindex, setindex!
+import Base: +, -, *, ^, /, convert, show, getindex, setindex!
 
 #using Touchstone
 # Definitions of NetworkParams, NetworkData
 include("NetworkParams.jl")
+include("Circuit.jl")
 include("NetworkData.jl")
 
 reflection_coefficient(Z1, Z2) = (Z2 - Z1) / (Z2 + Z1)
