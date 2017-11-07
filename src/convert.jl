@@ -1,4 +1,4 @@
-Complex{BigFloat}# convert(any-params, data) = convert(NetworkData{any-params}, data)
+# convert(any-params, data) = convert(NetworkData{any-params}, data)
 convert(::Type{T}, D::NetworkData{S}) where {T<:NetworkParams, S<:NetworkParams} =
     convert(NetworkData{T}, D)
 convert(::Type{T}, D::Touchstone) where {T<:NetworkParams} =
