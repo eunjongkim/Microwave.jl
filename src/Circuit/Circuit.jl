@@ -95,4 +95,4 @@ getindex(D::CircuitData{T}, I::Vector) where {T<:CircuitParams} = [D.params[n] f
 getindex(D::CircuitData{T}, I::Vector{Bool}) where {T<:CircuitParams} = (length(D.params) == length(I))?
     [D.params[n].data for n in Base.LogicalIndex(I)]:
     error("Length of the mask different from lenghth of the array attemped to access")
-getindex(D::NetworkData{T}, ::Colon) where {T<:NetworkParams} = getindex(D, 1:length(D.params))
+getindex(D::CircuitData{T}, ::Colon) where {T<:CircuitParams} = getindex(D, 1:length(D.params))
