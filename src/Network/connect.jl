@@ -1,6 +1,5 @@
 export connect_ports, innerconnect_ports, cascade
 
-
 check_frequency_identical(ntwkA::NetworkData{T},
     ntwkB::NetworkData{S}) where {T<:NetworkParams, S<:NetworkParams} =
     (ntwkA.frequency == ntwkB.frequency)
@@ -8,6 +7,17 @@ check_frequency_identical(ntwkA::NetworkData{T},
 check_port_impedance_identical(ntwkA::NetworkData{T}, k,
     ntwkB::NetworkData{S}, l) where {T<:NetworkParams, S<:NetworkParams} =
     (ntwkA.ports[k].impedance == ntwkA.ports[k].impedance)
+
+reflection_coefficient(Z1, Z2) = (Z2 - Z1) / (Z2 + Z1)
+transmission_coefficient(Z1, Z2) = 1 + reflection_coefficient(Z1, Z2)
+impedance_step(Z1, Z2) =
+    Sparams([reflection_coefficient(Z1, Z2) transmission_coefficient(Z2, Z1);
+        transmission_coefficient(Z1, Z2) reflection_coefficient(Z2, Z1)])
+
+check_two_port(ntwk::NetworkData{T}) where {T<:NetworkParams} =
+    (ntwk.nPort == 2)
+check_is_uniform(ntwk::NetworkData{T}) where {T<:NetworkParams} =
+    (ntwk.is_uniform == true)
 
 """
     connect_ports(ntwkA::NetworkData{T}, k::Int,
