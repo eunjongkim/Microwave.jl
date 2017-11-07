@@ -25,7 +25,7 @@ series_network(Z::Array{T, 1}) where {T<:CircuitParams} =
 Promote `CircuitData` to `NetworkData{ABCDparams}` assuming series connection.
 """
 series_network(D::CircuitData{T}) where {T<:CircuitParams} =
-    NetworkData(D.frequency, series_network(D.data))
+    NetworkData(D.frequency, series_network(D.params))
 
 """
     parallel_network(Y::CircuitParams)
@@ -52,7 +52,7 @@ parallel_network(Y::Array{T, 1}) where {T<:CircuitParams} =
 Promote `CircuitData` to `NetworkData{ABCDparams}` assuming parallel connection.
 """
 parallel_network(D::CircuitData{T}) where {T<:CircuitParams} =
-    NetworkData(D.frequency, parallel_network(D.data))
+    NetworkData(D.frequency, parallel_network(D.params))
 
 """
     terminated_network(Z::CircuitParams; Z0=50.0)
@@ -83,7 +83,7 @@ Promote `CircuitData` to `NetworkData{Sparams}` assuming terminated
 connection to ground.
 """
 terminated_network(D::CircuitData{T}; Z0=50.0) where {T<:CircuitParams} =
-    NetworkData(D.frequency, terminated_network(D.data; Z0=Z0))
+    NetworkData(D.frequency, terminated_network(D.params; Z0=Z0))
 
 """
     Πnetwork(Y1::CircuitParams, Y2::CircuitParams, Y3::CircuitParams)
@@ -123,7 +123,7 @@ Promote `CircuitData` D1, D2, and D3 to `NetworkData{ABCDparams}` assuming
 Πnetwork(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
     {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
     check_frequency_identical(D1, D2, D3) ?
-    NetworkData(D1.frequency, Πnetwork(D1.data, D2.data, D3.data)) :
+    NetworkData(D1.frequency, Πnetwork(D1.params, D2.params, D3.params)) :
     error("`NetworkData` can only be constructed for `CircuitData` defined in same frequencies")
 
 """
@@ -165,5 +165,5 @@ T-network configuration. Supported only for data with same frequency range.
 Tnetwork(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
     {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
     check_frequency_identical(D1, D2, D3) ?
-    NetworkData(D1.frequency, Tnetwork(D1.data, D2.data, D3.data)) :
+    NetworkData(D1.frequency, Tnetwork(D1.params, D2.params, D3.params)) :
     error("`NetworkData` can only be constructed for `CircuitData` defined in same frequencies")

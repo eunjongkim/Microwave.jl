@@ -13,7 +13,7 @@ end
 mutable struct CircuitData{T<:CircuitParams}
     nPoint::Int
     frequency::Array{Float64, 1}
-    data::Array{T, 1}
+    params::Array{T, 1}
     CircuitData(frequency::Array{Float64, 1},
         data::Array{T, 1}) where {T<:CircuitParams} =
         new{T}(length(frequency), frequency, data)
@@ -70,7 +70,7 @@ range.
 +(D1::CircuitData{T}, D2::CircuitData{T},
     D3::CircuitData{T}...) where {T<:CircuitParams} =
     check_frequency_identical(D1, D2, D3...) ?
-    CircuitData(D1.frequency, +([d.data for d in [D1, D2, D3...]]...)) :
+    CircuitData(D1.frequency, +([d.params for d in [D1, D2, D3...]]...)) :
     error(circuit_op_error)
 
 """
@@ -81,7 +81,7 @@ same frequency range.
 ∥(D1::CircuitData{T}, D2::CircuitData{T},
     D3::CircuitData{T}...) where {T<:CircuitParams} =
     check_frequency_identical(D1, D2, D3...) ?
-    CircuitData(D1.frequency, .∥([d.data for d in [D1, D2, D3...]]...)) :
+    CircuitData(D1.frequency, .∥([d.params for d in [D1, D2, D3...]]...)) :
     error(circuit_op_error)
 
 function show(io::IO, D::CircuitData{T}) where {T<:CircuitParams}
