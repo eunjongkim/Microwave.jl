@@ -4,19 +4,18 @@ module Microwave
 import Base: +, -, *, ^, /, convert, show, getindex, setindex!
 
 #using Touchstone
-include("Circuit\Circuit.jl")
-include("Circuit\convert.jl")
+include(joinpath("Circuit", "Circuit.jl"))
+include(joinpath("Circuit", "convert.jl"))
 
 # Definitions of NetworkParams, NetworkData
-include("Network\NetworkParams.jl")
-include("Network\NetworkData.jl")
-include("Network\convert.jl")
-include("Network\connect.jl")
-include("Network\twoport.jl")
+include(joinpath("Network", "NetworkParams.jl"))
+include(joinpath("Network", "NetworkData.jl"))
+include(joinpath("Network", "convert.jl"))
+include(joinpath("Network", "connect.jl"))
+include(joinpath("Network", "twoport.jl"))
 
-
-include("Touchstone\Touchstone.jl")
-include("Touchstone\convert.jl")
+include(joinpath("Touchstone", "Touchstone.jl"))
+include(joinpath("Touchstone", "convert.jl"))
 
 # interpolate data
 include("interpolate.jl")
