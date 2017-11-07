@@ -9,6 +9,11 @@ check_port_impedance_identical(ntwkA::NetworkData{T}, k,
     ntwkB::NetworkData{S}, l) where {T<:NetworkParams, S<:NetworkParams} =
     (ntwkA.ports[k].impedance == ntwkA.ports[k].impedance)
 
+"""
+    connect_ports(ntwkA::NetworkData{T}, k::Int,
+        ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
+Connect `k`-th port of `ntwkA` and `l`-th port of `ntwkB`. 
+"""
 function connect_ports(ntwkA::NetworkData{T}, k::Int,
     ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
     ZA, ZB = impedances(ntwkA), impedances(ntwkB)
@@ -28,6 +33,16 @@ function connect_ports(ntwkA::NetworkData{T}, k::Int,
     end
 end
 
+"""
+    innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
+Innerconnect two ports (assumed to have same port impedances) of a single n-port
+S-parameter network:
+```
+              Sₖⱼ Sᵢₗ (1 - Sₗₖ) + Sₗⱼ Sᵢₖ (1 - Sₖₗ) + Sₖⱼ Sₗₗ Sᵢₖ + Sₗⱼ Sₖₖ Sᵢₗ
+S′ᵢⱼ = Sᵢⱼ + ----------------------------------------------------------
+                            (1 - Sₖₗ) (1 - Sₗₖ) - Sₖₖ Sₗₗ
+```
+"""
 function innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
     k, l = sort([k, l])
     Z = impedances(ntwk)
@@ -48,14 +63,6 @@ function innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:Netw
     end
 end
 
-"""
-innerconnect two ports (assumed to have same port impedances) of a single n-port
-S-parameter network:
-
-              Sₖⱼ Sᵢₗ (1 - Sₗₖ) + Sₗⱼ Sᵢₖ (1 - Sₖₗ) + Sₖⱼ Sₗₗ Sᵢₖ + Sₗⱼ Sₖₖ Sᵢₗ
-S′ᵢⱼ = Sᵢⱼ + ----------------------------------------------------------
-                            (1 - Sₖₗ) (1 - Sₗₖ) - Sₖₖ Sₗₗ
-"""
 function _innerconnect_S(ntwk::NetworkData{Sparams}, k::Int, l::Int)
     k, l = sort([k, l])
     nPort, nPoint = ntwk.nPort, ntwk.nPoint
@@ -101,14 +108,19 @@ function _connect_S(A::NetworkData{Sparams}, k::Int,
 end
 
 """
-
-Cascade a 2-port touchstone data `Data::NetworkData{T}` `N::Int` times
+    cascade(ntwk::NetworkData{ABCDparams}, N::Int)
+Cascade a 2-port network data `Data::NetworkData{T}` `N::Int` times
 """
 cascade(ntwk::NetworkData{ABCDparams}, N::Int) =
     NetworkData(ntwk.ports, ntwk.frequency, [p^N for p in ntwk.params])
 cascade(ntwk::NetworkData{T}, N::Int) where {T<:NetworkParams} =
     convert(T, cascade(convert(ABCDparams, ntwk), N))
 
+"""
+    cascade(ntwk1::NetworkData{ABCDparams}, ntwk2::NetworkData{ABCDparams},
+        ntwk3::NetworkData{ABCDparams}...)
+Cascade 2-port networks.
+"""
 function cascade(ntwk1::NetworkData{ABCDparams}, ntwk2::NetworkData{ABCDparams},
     ntwk3::NetworkData{ABCDparams}...)
     ntwks = [ntwk1, ntwk2, ntwk3...]

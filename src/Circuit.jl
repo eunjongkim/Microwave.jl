@@ -25,6 +25,7 @@ end
 ^(param::T, N::Int) where {T<:CircuitParams} = T(^(param.data, N))
 
 """
+    ∥(param1::T, param2::T, param3::T...) where {T<:CircuitParams}
 Parallel addition of objects `T<:CircuitParams`. If `T` is `Impedance`, it
 returns the equivalent parallel impedance of given impedances. If `T` is
 `admittance` it returns the equivalent series admittance of given admittances.
@@ -45,9 +46,7 @@ Parallel addition of two circuit data
 """
 ∥(D1::CircuitData{T}, D2::CircuitData{T}) where {T<:CircuitParams} =
     CircuitData(D1.frequency, .∥(D1.data, D2.data))
-#
-# function +(D1::CircuitData{T}, D2::CircuitData{S}) where {T<:CircuitParams, S<:CircuitParams}
-#     CircuitData(D1.frequency, )
+
 
 function show(io::IO, D::CircuitData{T}) where {T<:CircuitParams}
     write(io, "$(typeof(D)):\n")
@@ -64,7 +63,8 @@ convert(::Type{T}, D::CircuitData{S}) where {T<:CircuitParams, S<:CircuitParams}
 
 
 """
-Series Network
+    series_network
+Promote `CircuitData`(or `CircuitParams`) to `NetworkData`(or `NetworkParams`)
 ```
         ┌────┐
 ○───────┤ Z  ├───────○
@@ -80,7 +80,7 @@ series_network(D::CircuitData{T}) where {T<:CircuitParams} =
     NetworkData(D.frequency, series_network(D.data))
 
 """
-Parallel Network
+    parallel_network
 ```
 ○──────────┬─────────○
          ┌─┴─┐
@@ -97,7 +97,7 @@ parallel_network(D::CircuitData{T}) where {T<:CircuitParams} =
     NetworkData(D.frequency, parallel_network(D.data))
 
 """
-Terminated Network
+    terminated_network
 ```
      ┌─────────○
    ┌─┴─┐
@@ -108,10 +108,39 @@ Terminated Network
 """
 function terminated_network(Z::CircuitParams; Z0=50.0)
     d = zeros(Complex{BigFloat}, (1, 1))
-    d[1, 1] = (convert(Impedance, Z).data - Z0)/(convert(Impedance, Z).data + Z0)
+    d[1, 1] = reflection_coefficient(Z0, convert(Impedance, Z).data)
     return Sparams(d)
 end
 terminated_network(Z::Array{T, 1}; Z0=50.0) where {T<:CircuitParams} =
     [terminated_network(Z[idx]; Z0=Z0) for idx in 1:length(Z)]
 terminated_network(D::CircuitData{T}; Z0=50.0) where {T<:CircuitParams} =
     NetworkData(D.frequency, terminated_network(D.data; Z0=Z0))
+
+# TODO: Pi- and T- networks
+#
+# """
+# ΠNetwork
+#              ┌────┐
+#   ○──────┬───┤ L2 ├───┬──────○
+#        ┌─┴─┐ └────┘ ┌─┴─┐
+# port1  |L1 |        |L3 |  port2
+#        └─┬─┘        └─┬─┘
+#   ○──────┴────────────┴──────○
+#
+# """
+# Πnetwork(Y1, Y2, Y3) = [ABCDparams([(1 + Y2[idx]/Y3[idx]) (1/Y3[idx]);
+#         (Y1[idx] + Y2[idx] + Y1[idx] * Y2[idx] / Y3[idx]) (1 + Y1[idx] / Y3[idx])]) for idx in 1:length(Y1)]
+#
+#
+# """
+#     TNetwork
+#      ┌────┐       ┌────┐
+# ○────┤ L1 ├───┬───┤ L2 ├───○
+#      └────┘ ┌─┴─┐ └────┘
+# port1       |L3 |      port2
+#             └─┬─┘
+# ○─────────────┴────────────○
+#
+# """
+# Tnetwork(Z1, Z2, Z3) = [ABCDparams([(1 + Z1[idx] / Z3[idx]) (Z1[idx] + Z2[idx] + Z1[idx] * Z2[idx] / Z3[idx]);
+#         (1 / Z3[idx]) (1 + Z2[idx] / Z3[idx])]) for idx in 1:length(Z1)]
