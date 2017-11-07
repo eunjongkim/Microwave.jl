@@ -88,3 +88,11 @@ function show(io::IO, D::CircuitData{T}) where {T<:CircuitParams}
     write(io, "$(typeof(D)):\n")
     write(io, "\tNumber of datapoints = $(D.nPoint)\n")
 end
+
+getindex(D::CircuitData{T}, I::Int) where {T<:CircuitParams} = D.params[I].data
+getindex(D::CircuitData{T}, I::Range) where {T<:CircuitParams} = [D.params[n].data for n in I]
+getindex(D::CircuitData{T}, I::Vector) where {T<:CircuitParams} = [D.params[n] for n in I]
+getindex(D::CircuitData{T}, I::Vector{Bool}) where {T<:CircuitParams} = (length(D.params) == length(I))?
+    [D.params[n].data for n in Base.LogicalIndex(I)]:
+    error("Length of the mask different from lenghth of the array attemped to access")
+getindex(D::NetworkData{T}, ::Colon) where {T<:NetworkParams} = getindex(D, 1:length(D.params))
