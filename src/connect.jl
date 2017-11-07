@@ -12,7 +12,9 @@ check_port_impedance_identical(ntwkA::NetworkData{T}, k,
 """
     connect_ports(ntwkA::NetworkData{T}, k::Int,
         ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
-Connect `k`-th port of `ntwkA` and `l`-th port of `ntwkB`. 
+Connect `k`-th port of `ntwkA` and `l`-th port of `ntwkB`. Note that an
+impedance step is inserted between connecting ports if port impedances are not
+identical.
 """
 function connect_ports(ntwkA::NetworkData{T}, k::Int,
     ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
@@ -35,13 +37,15 @@ end
 
 """
     innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
-Innerconnect two ports (assumed to have same port impedances) of a single n-port
-S-parameter network:
+Innerconnect `k`-th and `l`-th ports of a single n-port network with following
+S-parameter formula:
 ```
               Sₖⱼ Sᵢₗ (1 - Sₗₖ) + Sₗⱼ Sᵢₖ (1 - Sₖₗ) + Sₖⱼ Sₗₗ Sᵢₖ + Sₗⱼ Sₖₖ Sᵢₗ
 S′ᵢⱼ = Sᵢⱼ + ----------------------------------------------------------
                             (1 - Sₖₗ) (1 - Sₗₖ) - Sₖₖ Sₗₗ
 ```
+Note that an impedance step is inserted between connecting ports if port
+impedances are not identical.
 """
 function innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
     k, l = sort([k, l])
