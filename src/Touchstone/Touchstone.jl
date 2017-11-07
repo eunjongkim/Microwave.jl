@@ -22,7 +22,7 @@ and data from a touchstone (.sNp) file.
 """
 function read_touchstone(filepath::AbstractString; raw=false)
     f = open(filepath, "r")
-    println("Reading touchstone file ", filepath, " ...")
+    # println("Reading touchstone file ", filepath, " ...")
 
     if ~(uppercase(filepath[end-2]) == 'S') | ~(uppercase(filepath[end]) == 'P')
         return error("Not a touchstone (.sNp) file.")
