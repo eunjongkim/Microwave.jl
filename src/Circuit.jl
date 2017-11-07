@@ -183,6 +183,8 @@ terminated_network(D::CircuitData{T}; Z0=50.0) where {T<:CircuitParams} =
 
 """
     Πnetwork(Y1::CircuitParams, Y2::CircuitParams, Y3::CircuitParams)
+Promote `CircuitParams` Y1, Y2, and Y3 to `ABCDparams` assuming Π-network
+configuration.
 ```
               ┌────┐
    ○──────┬───┤ Y3 ├───┬──────○
@@ -198,10 +200,22 @@ function Πnetwork(Y1::CircuitParams, Y2::CircuitParams, Y3::CircuitParams)
         (_Y1 + _Y2 + _Y1 * _Y2/_Y3) (1 + _Y1/_Y3)])
 end
 
+"""
+    Πnetwork(Y1::Array{T, 1}, Y2::Array{S, 1}, Y3::Array{U, 1}) where
+        {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams}
+Promote arrays of `CircuitParams` Y1, Y2, and Y3 to those of `ABCDparams`
+assuming Π-network configuration.
+"""
 Πnetwork(Y1::Array{T, 1}, Y2::Array{S, 1}, Y3::Array{U, 1}) where
     {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
     [Πnetwork(Y1[idx], Y2[idx], Y3[idx]) for idx in 1:length(Y1)]
 
+"""
+    Πnetwork(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
+        {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams}
+Promote `CircuitData` D1, D2, and D3 to `NetworkData{ABCDparams}` assuming
+Π-network configuration. Supported only for data with same frequency range.
+"""
 Πnetwork(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
     {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
     check_frequency_identical(D1, D2, D3) ?
@@ -209,8 +223,10 @@ end
     error("`NetworkData` can only be constructed for `CircuitData` defined in same frequencies")
 
 """
+    Tnetwork(Z1::CircuitParams, Z2::CircuitParams, Z3::CircuitParams)
+Promote `CircuitParams` Z1, Z2, and Z3 to `ABCDparams` assuming T-network
+configuration.
 ```
-    TNetwork
       ┌────┐       ┌────┐
  ○────┤ Z1 ├───┬───┤ Z2 ├───○
       └────┘ ┌─┴─┐ └────┘
@@ -225,10 +241,23 @@ function Tnetwork(Z1::CircuitParams, Z2::CircuitParams, Z3::CircuitParams)
         1/_Z3 (1 + _Z2/_Z3)])
 end
 
+"""
+    Tnetwork(D1::Array{T, 1}, D2::Array{S, 1}, D3::Array{U, 1}) where
+        {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams}
+Promote arrays of `CircuitParams` Z1, Z2, and Z3 to those of `ABCDparams`
+assuming T-network configuration.
+
+"""
 Tnetwork(Z1::Array{T, 1}, Z2::Array{S, 1}, Z3::Array{U, 1}) where
     {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
     [Tnetwork(Z1[idx], Z2[idx], Z3[idx]) for idx in 1:length(Z1)]
 
+"""
+    Tnetwork(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
+        {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams}
+Promote `CircuitData` D1, D2, and D3 to `NetworkData{ABCDparams}` assuming
+T-network configuration. Supported only for data with same frequency range.
+"""
 Tnetwork(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
     {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
     check_frequency_identical(D1, D2, D3) ?
