@@ -18,7 +18,17 @@ mutable struct CircuitData{T<:CircuitParams}
         new{T}(length(frequency), frequency, data)
 end
 
-+(param1::T, param2::T) where {T<:CircuitParams} = T(param1.data + param2.data)
+"""
+    +(param1::T, param2::T, param3::T...) where {T<:CircuitParams}
+Addition of objects `T<:CircuitParams`.
+- If `T` is `Impedance`, it returns the equivalent series impedance of given
+impedances: Zeq = Z1 + Z2 + ⋯ + Zn
+- If `T` is `Admittance` it returns the equivalent parallel admittance of given
+admittances: Yeq = Y1 + Y2 + ⋯ + Yn
+"""
++(param1::T, param2::T, param3::T...) where {T<:CircuitParams} =
+    T(+([p.data for p in [param1::T, param2::T, param3::T...]]...))
+
 -(param1::T, param2::T) where {T<:CircuitParams} = T(param1.data - param2.data)
 *(param1::T, param2::T) where {T<:CircuitParams} = T(param1.data * param2.data)
 /(param1::T, param2::T) where {T<:CircuitParams} = T(param1.data / param2.data)
@@ -26,23 +36,25 @@ end
 
 """
     ∥(param1::T, param2::T, param3::T...) where {T<:CircuitParams}
-Parallel addition of objects `T<:CircuitParams`. If `T` is `Impedance`, it
-returns the equivalent parallel impedance of given impedances. If `T` is
-`admittance` it returns the equivalent series admittance of given admittances.
+Reciprocal addition of objects `T<:CircuitParams`.
+- If `T` is `Impedance`, it returns the equivalent parallel impedance of given
+impedances: Zeq⁻¹ = Z1⁻¹ + Z2⁻¹ + ⋯ + Zn⁻¹
+- If `T` is `Admittance` it returns the equivalent series admittance of given
+admittances: Yeq⁻¹ = Y1⁻¹ + Y2⁻¹ + ⋯ + Yn⁻¹
 """
-function ∥(param1::T, param2::T, param3::T...) where {T<:CircuitParams}
-    params = [param1, param2, param3...]
-    return T(1 / +([1/p.data for p in params]...))
-end
+∥(param1::T, param2::T, param3::T...) where {T<:CircuitParams} =
+    T(1 / +([1/p.data for p in [param1, param2, param3...]]...))
 
 """
-Series addition of two circuit data
+    +(D1::CircuitData{T}, D2::CircuitData{T}) where {T<:CircuitParams}
+Addition of two circuit data
 """
 +(D1::CircuitData{T}, D2::CircuitData{T}) where {T<:CircuitParams} =
     CircuitData(D1.frequency, +(D1.data, D2.data))
 
 """
-Parallel addition of two circuit data
+    ∥(D1::CircuitData{T}, D2::CircuitData{T}) where {T<:CircuitParams}
+Reciprocal addition of two circuit data
 """
 ∥(D1::CircuitData{T}, D2::CircuitData{T}) where {T<:CircuitParams} =
     CircuitData(D1.frequency, .∥(D1.data, D2.data))
@@ -63,8 +75,8 @@ convert(::Type{T}, D::CircuitData{S}) where {T<:CircuitParams, S<:CircuitParams}
 
 
 """
-    series_network
-Promote `CircuitData`(or `CircuitParams`) to `NetworkData`(or `NetworkParams`)
+    series_network(Z::CircuitParams)
+Promote `CircuitParams` to `NetworkParams` assuming series connection.
 ```
         ┌────┐
 ○───────┤ Z  ├───────○
@@ -76,11 +88,16 @@ series_network(Z::CircuitParams) =
     ABCDparams([1.0 convert(Impedance, Z).data; 0.0 1.0])
 series_network(Z::Array{T, 1}) where {T<:CircuitParams} =
     [series_network(Z[idx]) for idx in 1:length(Z)]
+"""
+    series_network(D::CircuitData{T}) where {T<:CircuitParams}
+Promote `CircuitData` to `NetworkData` assuming series connection.
+"""
 series_network(D::CircuitData{T}) where {T<:CircuitParams} =
     NetworkData(D.frequency, series_network(D.data))
 
 """
-    parallel_network
+    parallel_network(Y::CircuitParams)
+Promote `CircuitParams` to `NetworkParams` assuming parallel connection.
 ```
 ○──────────┬─────────○
          ┌─┴─┐
@@ -93,6 +110,10 @@ parallel_network(Y::CircuitParams) =
     ABCDparams([1.0 0.0; convert(Admittance, Y).data 1.0])
 parallel_network(Y::Array{T, 1}) where {T<:CircuitParams} =
     [parallel_network(Y[idx]) for idx in 1:length(Y)]
+"""
+    series_network(D::CircuitData{T}) where {T<:CircuitParams}
+Promote `CircuitData` to `NetworkData` assuming parallel connection.
+"""
 parallel_network(D::CircuitData{T}) where {T<:CircuitParams} =
     NetworkData(D.frequency, parallel_network(D.data))
 
