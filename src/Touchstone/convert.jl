@@ -48,7 +48,7 @@ end
 function __touchstone_sparams_ri(nPort, nPoint, data)
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex{BigFloat}, (nPort, nPort))
+        tmp = zeros(Complex{MFloat}, (nPort, nPort))
         for i in 1:nPort, j in 1:nPort
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
@@ -62,7 +62,7 @@ end
 function __touchstone_sparams_ma(nPort, nPoint, data)
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex{BigFloat}, (nPort, nPort))
+        tmp = zeros(Complex{MFloat}, (nPort, nPort))
         for i in 1:nPort, j in 1:nPort
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
@@ -76,7 +76,7 @@ end
 function __touchstone_sparams_db(nPort, nPoint, data)
     params = Vector{Sparams}(nPoint)
     for n in 1:nPoint
-        tmp = zeros(Complex{BigFloat}, (nPort, nPort))
+        tmp = zeros(Complex{MFloat}, (nPort, nPort))
         for i in 1:nPort, j in 1:nPort
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2

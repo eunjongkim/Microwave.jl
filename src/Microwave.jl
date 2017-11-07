@@ -1,8 +1,11 @@
+# __precompile__(true)
 module Microwave
 # Microwave.jl
 # Author: Eunjong Kim
 import Base: +, -, *, ^, /, convert, show, getindex, setindex!
+export setMicrowaveFloat
 
+const MFloat = BigFloat
 #using Touchstone
 include(joinpath("Circuit", "Circuit.jl"))
 include(joinpath("Circuit", "convert.jl"))

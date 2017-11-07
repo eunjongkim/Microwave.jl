@@ -11,7 +11,7 @@ Scattering parameters for microwave network. Contains a
 """
 mutable struct Sparams <: NetworkParams
     nPort::Int
-    data::Array{Complex{BigFloat}, 2}
+    data::Array{Complex{MFloat}, 2}
     function Sparams(data)
         nr, nc = size(data)
         if nr != nc
@@ -28,7 +28,7 @@ Admittance-parameters for microwave network
 """
 mutable struct Yparams <: NetworkParams
     nPort::Int
-    data::Array{Complex{BigFloat}, 2}
+    data::Array{Complex{MFloat}, 2}
     function Yparams(data)
         nr, nc = size(data)
         if nr != nc
@@ -45,7 +45,7 @@ Impedance-parameters for microwave network
 """
 mutable struct Zparams <: NetworkParams
     nPort::Int
-    data::Array{Complex{BigFloat}, 2}
+    data::Array{Complex{MFloat}, 2}
     function Zparams(data)
         nr, nc = size(data)
         if nr != nc
@@ -62,7 +62,7 @@ Transfer-parameters for microwave network
 """
 mutable struct ABCDparams <: TwoPortParams
     nPort::Int
-    data::Array{Complex{BigFloat}, 2}
+    data::Array{Complex{MFloat}, 2}
     function ABCDparams(data)
         nr, nc = size(data)
         if nr != nc

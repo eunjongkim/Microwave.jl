@@ -31,7 +31,7 @@ G_ref(D::NetworkData) = G_ref(D.ports)
 Conversion from S-parameters to Z-parameters
 """
 function _S_to_Z(S::NetworkData{Sparams})
-    E = eye(Complex{BigFloat}, S.nPort)
+    E = eye(Complex{MFloat}, S.nPort)
     _Z_ref, _G_ref = Z_ref(S), G_ref(S)
     params = [Zparams(inv(_G_ref) * inv(E - S.params[n].data) *
         (E + S.params[n].data) * _Z_ref * _G_ref) for n in 1:S.nPoint]
@@ -42,7 +42,7 @@ end
 Conversion from S-parameters to Y-parameters
 """
 function _S_to_Y(S::NetworkData{Sparams})
-    E = eye(Complex{BigFloat}, S.nPort)
+    E = eye(Complex{MFloat}, S.nPort)
     _Z_ref, _G_ref = Z_ref(S), G_ref(S)
     params = [Yparams(inv(_G_ref) * inv(_Z_ref) *
         inv(E + S.params[n].data) * (E - S.params[n].data) *
@@ -64,7 +64,7 @@ end
 Conversion from Y-parameters to S-parameters
 """
 function _Y_to_S(Y::NetworkData{Yparams})
-    E = eye(Complex{BigFloat}, Y.nPort)
+    E = eye(Complex{MFloat}, Y.nPort)
     _Z_ref, _G_ref = Z_ref(Y), G_ref(Y)
     params = [Sparams(_G_ref * (E - _Z_ref * Y.params[n].data) *
         inv(E + _Z_ref * Y.params[n].data) * inv(_G_ref)) for n in 1:Y.nPoint]

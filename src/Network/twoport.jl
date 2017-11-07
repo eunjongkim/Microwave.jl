@@ -66,7 +66,7 @@ Promote `CircuitParams` to `Sparams` assuming terminated connection to ground.
 ```
 """
 function terminated_network(Z::CircuitParams; Z0=50.0)
-    d = zeros(Complex{BigFloat}, (1, 1))
+    d = zeros(Complex{MFloat}, (1, 1))
     d[1, 1] = reflection_coefficient(Z0, convert(Impedance, Z).data)
     return Sparams(d)
 end

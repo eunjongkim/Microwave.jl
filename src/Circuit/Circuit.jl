@@ -3,11 +3,11 @@ export CircuitParams, Impedance, Admittance, CircuitData, ∥
 abstract type CircuitParams end
 
 mutable struct Impedance <: CircuitParams
-    data::Complex{BigFloat}
+    data::Complex{MFloat}
 end
 
 mutable struct Admittance <: CircuitParams
-    data::Complex{BigFloat}
+    data::Complex{MFloat}
 end
 
 mutable struct CircuitData{T<:CircuitParams}
