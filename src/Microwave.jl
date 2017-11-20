@@ -17,6 +17,10 @@ export Circuit
 export CircuitParams, Impedance, Admittance, CircuitData, ∥,
     resistor, inductor, capacitor
 
+include(joinpath("Network", "Network.jl"))
+import .Network: NetworkParams, Sparams, Yparams, Zparams, TwoPortParams, ABCDparams
+export Network
+export NetworkParams, Sparams, Yparams, Zparams, TwoPortParams, ABCDparams
 # Definitions of NetworkParams, NetworkData
 # include(joinpath("Network", "NetworkParams.jl"))
 # include(joinpath("Network", "NetworkData.jl"))

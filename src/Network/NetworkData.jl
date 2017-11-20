@@ -16,9 +16,9 @@ end
 assigned whenever an instance of `Port` is created.
 `impedance`: impedance of the port.
 """
-struct Port
+struct Port{T<:Number}
     indPort::Int
-    impedance::Complex128
+    impedance::Impedance{T}
     Port(impedance) = new(p_counter(), impedance)
 end
 
@@ -67,7 +67,7 @@ end
 Convenience constructor for creating a `NetworkData` object of uniform port
 impedances.
 """
-NetworkData(frequency, params; impedance=50.0) =
+NetworkData(frequency, params; impedance::Impedance=Impedance(50.0+0.0im)) =
     NetworkData([Port(impedance) for n in 1:params[1].nPort], frequency, params)
 
 """
