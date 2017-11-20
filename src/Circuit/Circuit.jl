@@ -23,7 +23,7 @@ promote_rule(::Type{Impedance{T}}, ::Type{Impedance{S}}) where {T<:Number, S<:Nu
 promote_rule(::Type{Admittance{T}}, ::Type{Admittance{S}}) where {T<:Number, S<:Number} =
     Admittance{promote_type(T, S)}
 
-mutable struct CircuitData{S<:Real, T<:CircuitParams}
+mutable struct CircuitData{S<:Real, T<:CircuitParams} <: AbstractData
     nPoint::Int
     frequency::Vector{S}
     params::Vector{T}
