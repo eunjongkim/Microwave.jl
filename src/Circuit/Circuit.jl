@@ -1,96 +1,57 @@
+module Circuit
+
+import Microwave: AbstractParams, AbstractData
+import Base: +, -, *, /, ^, convert, promote_rule, show
+
 export CircuitParams, Impedance, Admittance, CircuitData, ∥
-abstract type CircuitParams end
+export capacitor, inductor, resistor
 
-mutable struct Impedance <: CircuitParams
-    data::Complex{MFloat}
+abstract type CircuitParams{T<:Number} <: AbstractParams end
+
+mutable struct Impedance{T<:Number} <: CircuitParams{T}
+    data::T
 end
+Impedance(zd::AbstractVector{T}) where {T<:Number} = [Impedance(zd_) for zd_ in zd]
 
-mutable struct Admittance <: CircuitParams
-    data::Complex{MFloat}
+mutable struct Admittance{T<:Number} <: CircuitParams{T}
+    data::T
 end
+Admittance(yd::AbstractVector{T}) where {T<:Number} = [Admittance(yd_) for yd_ in yd]
 
-mutable struct CircuitData{T<:CircuitParams}
+promote_rule(::Type{Impedance{T}}, ::Type{Impedance{S}}) where {T<:Number, S<:Number} =
+    Impedance{promote_type(T, S)}
+promote_rule(::Type{Admittance{T}}, ::Type{Admittance{S}}) where {T<:Number, S<:Number} =
+    Admittance{promote_type(T, S)}
+
+mutable struct CircuitData{S<:Real, T<:CircuitParams}
     nPoint::Int
-    frequency::Array{MFloat, 1}
-    params::Array{T, 1}
-    CircuitData(frequency, data::Array{T, 1}) where {T<:CircuitParams} =
-        new{T}(length(frequency), frequency, data)
+    frequency::Vector{S}
+    params::Vector{T}
+    CircuitData(frequency::AbstractVector{S},
+        data::Vector{T}) where {S<:Real, T<:CircuitParams} =
+        new{S,T}(length(frequency), collect(frequency), data)
 end
 
-"""
-    check_frequency_identical(D1::CircuitData{T}, D2::CircuitData{T},
-        D3::CircuitData{T}...) where {T<:NetworkParams}
-Check if all circuit data inputs share same frequency ranges.
-"""
-check_frequency_identical(D1::CircuitData{T}, D2::CircuitData{T},
-    D3::CircuitData{T}...) where {T<:CircuitParams} =
-    all([(D1.frequency == d.frequency) for d in [D2, D3...]])
-
-circuit_op_error = "CircuitData Error: Operations between `CircuitData` are only available between same frequency datasets"
-
-"""
-    +(param1::T, param2::T, param3::T...) where {T<:CircuitParams}
-Addition of objects `T<:CircuitParams`.
-- If `T` is `Impedance`, it returns the equivalent series impedance of given
-impedances: Zeq = Z1 + Z2 + ⋯ + Zn
-- If `T` is `Admittance` it returns the equivalent parallel admittance of given
-admittances: Yeq = Y1 + Y2 + ⋯ + Yn
-"""
-+(param1::T, param2::T, param3::T...) where {T<:CircuitParams} =
-    T(+([p.data for p in [param1, param2, param3...]]...))
-
-"""
-    -(param1::T, param2::T) where {T<:CircuitParams}
-Subtraction of objects `T<:CircuitParams`.
-"""
--(param1::T, param2::T) where {T<:CircuitParams} =
-    T(param1.data - param2.data)
-*(param1::T, param2::T) where {T<:CircuitParams} = T(param1.data * param2.data)
-/(param1::T, param2::T) where {T<:CircuitParams} = T(param1.data / param2.data)
-^(param::T, N::Int) where {T<:CircuitParams} = T(^(param.data, N))
-
-"""
-    ∥(param1::T, param2::T, param3::T...) where {T<:CircuitParams}
-Reciprocal addition of objects `T<:CircuitParams`.
-- If `T` is `Impedance`, it returns the equivalent parallel impedance of given
-impedances: Zeq⁻¹ = Z1⁻¹ + Z2⁻¹ + ⋯ + Zn⁻¹
-- If `T` is `Admittance` it returns the equivalent series admittance of given
-admittances: Yeq⁻¹ = Y1⁻¹ + Y2⁻¹ + ⋯ + Yn⁻¹
-"""
-∥(param1::T, param2::T, param3::T...) where {T<:CircuitParams} =
-    T(1 / +([1/p.data for p in [param1, param2, param3...]]...))
-
-"""
-    +(D1::CircuitData{T}, D2::CircuitData{T}) where {T<:CircuitParams}
-Addition of multiple `CircuitData`. Supported only for data with same frequency
-range.
-"""
-+(D1::CircuitData{T}, D2::CircuitData{T},
-    D3::CircuitData{T}...) where {T<:CircuitParams} =
-    check_frequency_identical(D1, D2, D3...) ?
-    CircuitData(D1.frequency, +([d.params for d in [D1, D2, D3...]]...)) :
-    error(circuit_op_error)
-
-"""
-    ∥(D1::CircuitData{T}, D2::CircuitData{T}) where {T<:CircuitParams}
-Reciprocal addition of multiple `CircuitData`. Supported only for data with
-same frequency range.
-"""
-∥(D1::CircuitData{T}, D2::CircuitData{T},
-    D3::CircuitData{T}...) where {T<:CircuitParams} =
-    check_frequency_identical(D1, D2, D3...) ?
-    CircuitData(D1.frequency, .∥([d.params for d in [D1, D2, D3...]]...)) :
-    error(circuit_op_error)
-
-function show(io::IO, D::CircuitData{T}) where {T<:CircuitParams}
+function show(io::IO, D::CircuitData{S, T}) where {S<:Real, T<:CircuitParams}
     write(io, "$(typeof(D)):\n")
     write(io, "\tNumber of datapoints = $(D.nPoint)\n")
 end
 
-getindex(D::CircuitData{T}, I::Int) where {T<:CircuitParams} = D.params[I].data
-getindex(D::CircuitData{T}, I::Range) where {T<:CircuitParams} = [D.params[n].data for n in I]
-getindex(D::CircuitData{T}, I::Vector) where {T<:CircuitParams} = [D.params[n] for n in I]
-getindex(D::CircuitData{T}, I::Vector{Bool}) where {T<:CircuitParams} = (length(D.params) == length(I))?
+getindex(D::CircuitData{S, T}, I::Int) where {S<:Real, T<:CircuitParams} =
+    D.params[I].data
+getindex(D::CircuitData{S, T}, I::Range) where {S<:Real, T<:CircuitParams} =
+    [D.params[n].data for n in I]
+getindex(D::CircuitData{S, T}, I::Vector) where {S<:Real, T<:CircuitParams} =
+    [D.params[n] for n in I]
+getindex(D::CircuitData{S, T}, I::Vector{Bool}) where {S<:Real,
+    T<:CircuitParams} = (length(D.params) == length(I))?
     [D.params[n].data for n in Base.LogicalIndex(I)]:
     error("Length of the mask different from lenghth of the array attemped to access")
-getindex(D::CircuitData{T}, ::Colon) where {T<:CircuitParams} = getindex(D, 1:length(D.params))
+getindex(D::CircuitData{S, T}, ::Colon) where {S<:Real, T<:CircuitParams} =
+    getindex(D, 1:length(D.params))
+
+include("convert.jl")
+include("operations.jl")
+include("RLC.jl")
+
+end

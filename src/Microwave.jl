@@ -3,24 +3,31 @@ module Microwave
 # Microwave.jl
 # Author: Eunjong Kim
 import Base: +, -, *, ^, /, convert, show, getindex, setindex!
-export setMicrowaveFloat
+# export setMicrowaveFloat
 
-const MFloat = BigFloat
+abstract type AbstractParams end
+abstract type AbstractData end
+
+# const MFloat = BigFloat
 #using Touchstone
 include(joinpath("Circuit", "Circuit.jl"))
-include(joinpath("Circuit", "convert.jl"))
+import .Circuit: CircuitParams, Impedance, Admittance, CircuitData, ∥,
+    resistor, inductor, capacitor
+export Circuit
+export CircuitParams, Impedance, Admittance, CircuitData, ∥,
+    resistor, inductor, capacitor
 
 # Definitions of NetworkParams, NetworkData
-include(joinpath("Network", "NetworkParams.jl"))
-include(joinpath("Network", "NetworkData.jl"))
-include(joinpath("Network", "convert.jl"))
-include(joinpath("Network", "connect.jl"))
-include(joinpath("Network", "twoport.jl"))
-
-include(joinpath("Touchstone", "Touchstone.jl"))
-include(joinpath("Touchstone", "convert.jl"))
+# include(joinpath("Network", "NetworkParams.jl"))
+# include(joinpath("Network", "NetworkData.jl"))
+# include(joinpath("Network", "convert.jl"))
+# include(joinpath("Network", "connect.jl"))
+# include(joinpath("Network", "twoport.jl"))
+#
+# include(joinpath("Touchstone", "Touchstone.jl"))
+# include(joinpath("Touchstone", "convert.jl"))
 
 # interpolate data
-include("interpolate.jl")
+# include("interpolate.jl")
 
 end # module
