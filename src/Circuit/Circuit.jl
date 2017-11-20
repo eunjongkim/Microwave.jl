@@ -1,5 +1,4 @@
 export CircuitParams, Impedance, Admittance, CircuitData, ∥
-
 abstract type CircuitParams end
 
 mutable struct Impedance <: CircuitParams
@@ -12,10 +11,9 @@ end
 
 mutable struct CircuitData{T<:CircuitParams}
     nPoint::Int
-    frequency::Array{Float64, 1}
+    frequency::Array{MFloat, 1}
     params::Array{T, 1}
-    CircuitData(frequency::Array{Float64, 1},
-        data::Array{T, 1}) where {T<:CircuitParams} =
+    CircuitData(frequency, data::Array{T, 1}) where {T<:CircuitParams} =
         new{T}(length(frequency), frequency, data)
 end
 
