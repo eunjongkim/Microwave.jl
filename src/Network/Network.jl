@@ -1,66 +1,57 @@
+module Network
+
+import Microwave: AbstractParams, AbstractData
+import Base: +, -, *, /, ^, convert, promote_rule, show
+
 export NetworkParams, Sparams, Yparams, Zparams
 export TwoPortParams, ABCDparams
 
-abstract type NetworkParams end
-abstract type TwoPortParams <: NetworkParams end
+abstract type NetworkParams{T<:Number} <: AbstractParams end
+abstract type TwoPortParams{T<:Number} <: NetworkParams{T} end
 
+check_row_column(data::Array{T, 2}) where {T<:NetworkParams} =
+    begin nr, nc = size(data)
+        (nr == nc)? nr: error("Number of rows and columns doesn't match")
+    end
 
 """
     Sparams(nPort, data) <: NetworkParams
 Scattering parameters for microwave network. Contains a
 """
-mutable struct Sparams <: NetworkParams
+mutable struct Sparams{T<:Number} <: NetworkParams{T}
     nPort::Int
-    data::Array{Complex{MFloat}, 2}
-    function Sparams(data)
-        nr, nc = size(data)
-        if nr != nc
-            error("Sparams Error: The number of rows and columns doesn't match")
-        else
-            new(nr, data)
-        end
-    end
+    data::Array{T, 2}
+    Sparams(data::Array{T, 2}) where {T<:Number} =
+        new{T}(check_row_column(data), data)
 end
 
 """
     Yparams(nPort, data) <: NetworkParams
 Admittance-parameters for microwave network
 """
-mutable struct Yparams <: NetworkParams
+mutable struct Yparams{T<:Number} <: NetworkParams{T}
     nPort::Int
-    data::Array{Complex{MFloat}, 2}
-    function Yparams(data)
-        nr, nc = size(data)
-        if nr != nc
-            error("Yparams Error: The number of rows and columns doesn't match")
-        else
-            new(nr, data)
-        end
-    end
+    data::Array{T, 2}
+    Yparams(data::Array{T, 2}) where {T<:Number} =
+        new{T}(check_row_column(data), data)
 end
 
 """
     Zparams(nPort, data) <: NetworkParams
 Impedance-parameters for microwave network
 """
-mutable struct Zparams <: NetworkParams
+mutable struct Zparams{T<:Number} <: NetworkParams{T}
     nPort::Int
-    data::Array{Complex{MFloat}, 2}
-    function Zparams(data)
-        nr, nc = size(data)
-        if nr != nc
-            error("Zparams Error: The number of rows and columns doesn't match")
-        else
-            new(nr, data)
-        end
-    end
+    data::Array{T, 2}
+    Zparams(data::Array{T, 2}) where {T<:Number} =
+        new{T}(check_row_column(data), data)
 end
 
 """
     ABCDparams(nPort, data) <: NetworkParams
 Transfer-parameters for microwave network
 """
-mutable struct ABCDparams <: TwoPortParams
+mutable struct ABCDparams{T<:Number} <: TwoPortParams{T}
     nPort::Int
     data::Array{Complex{MFloat}, 2}
     function ABCDparams(data)
