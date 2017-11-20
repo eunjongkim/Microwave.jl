@@ -33,8 +33,8 @@ mutable struct CircuitData{S<:Real, T<:CircuitParams}
 end
 
 function show(io::IO, D::CircuitData{S, T}) where {S<:Real, T<:CircuitParams}
-    write(io, "$(typeof(D)):\n")
-    write(io, "\tNumber of datapoints = $(D.nPoint)\n")
+    write(io, "$(typeof(D)):")
+    write(io, "  Number of datapoints = $(D.nPoint)\n")
 end
 
 getindex(D::CircuitData{S, T}, I::Int) where {S<:Real, T<:CircuitParams} =
