@@ -1,3 +1,9 @@
+# promotion methods for CircuitParams
+for p in (:Impedance, :Admittance)
+    @eval promote_rule(::Type{($p){T}}, ::Type{($p){S}}) where {T<:Number, S<:Number} =
+        ($p){promote_type(T, S)}
+end
+
 # convert methods for CircuitParams, Array{CircuitParams, 1}, and CircuitData
 convert(::Type{Impedance{T}}, z::Impedance{S}) where {T<:Number, S<:Number} =
     Impedance(convert(T, z.data))
