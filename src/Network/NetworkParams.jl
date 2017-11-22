@@ -56,11 +56,6 @@ mutable struct ABCDparams{T<:Number} <: TwoPortParams{T}
 end
 ABCDparams(P::Vector{Array{T, 2}}) where {T<:Number} = [ABCDparams(p) for p in P]
 
-for p in (:Sparams, :Yparams, :Zparams, :ABCDparams)
-    @eval promote_rule(::Type{($p){T}}, ::Type{($p){S}}) where {T<:Number, S<:Number} =
-        ($p){promote_type(T, S)}
-end
-
 """
     show(io::IO, params::NetworkParams)
 Pretty-printing of `NetworkParams`

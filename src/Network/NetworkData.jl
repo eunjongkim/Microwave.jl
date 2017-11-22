@@ -1,4 +1,3 @@
-export Port, NetworkData, impedances, swap_ports!, permute_ports!
 
 let
     state = 0
@@ -18,8 +17,9 @@ assigned whenever an instance of `Port` is created.
 """
 struct Port
     index::Int
-    impedance::Impedance{T} where {T<:Number}
-    Port(impedance::Impedance{T}) where {T<:Number} = new(port_counter(), impedance)
+    impedance::Impedance
+    Port(impedance::Impedance{T}) where {T<:Number} =
+        new(port_counter(), impedance)
 end
 Port(impedance::Number) = Port(Impedance(impedance))
 
@@ -28,7 +28,7 @@ Port(impedance::Number) = Port(Impedance(impedance))
 """
     NetworkData{S<:Real, T<:NetworkParams}
 """
-mutable struct NetworkData{S<:Real, T<:NetworkParams} <: NetworkData
+mutable struct NetworkData{S<:Real, T<:NetworkParams} <: AbstractData
     nPort::Int
     nPoint::Int
     is_uniform::Bool
@@ -73,7 +73,7 @@ NetworkData(frequency::AbstractVector{S}, params::Vector{T};
     show(io::IO, D::NetworkData{T}) where {T<:NetworkParams}
 Pretty-printing of `NetworkData`.
 """
-function show(io::IO, D::NetworkData{T}) where {T<:NetworkParams}
+function show(io::IO, D::NetworkData{S, T}) where {S<:Real, T<:NetworkParams}
     write(io, "$(D.nPort)-port $(typeof(D)):\n")
     write(io, "  Number of datapoints = $(D.nPoint)\n")
     write(io, "  Port Informaton:\n")

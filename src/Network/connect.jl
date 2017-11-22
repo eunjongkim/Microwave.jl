@@ -1,36 +1,71 @@
 export connect_ports, innerconnect_ports, cascade
+export reflection_coefficient, transmission_coefficient, impedance_step
 
-check_frequency_identical(ntwkA::NetworkData{T},
-    ntwkB::NetworkData{S}) where {T<:NetworkParams, S<:NetworkParams} =
-    (ntwkA.frequency == ntwkB.frequency)
+check_frequency_identical(ntwkA::NetworkData{S1, T1},
+    ntwkB::NetworkData{S2, T2}) where {S1<:Real, S2<:Real, T1<:NetworkParams,
+    T2<:NetworkParams} = (ntwkA.frequency == ntwkB.frequency)
 
-check_port_impedance_identical(ntwkA::NetworkData{T}, k,
-    ntwkB::NetworkData{S}, l) where {T<:NetworkParams, S<:NetworkParams} =
-    (ntwkA.ports[k].impedance == ntwkA.ports[k].impedance)
+check_port_impedance_identical(ntwkA::NetworkData{S1, T1}, k,
+    ntwkB::NetworkData{S2, T2}, l) where {S1<:Real, S2<:Real, T1<:NetworkParams,
+    T2<:NetworkParams} = (ntwkA.ports[k].impedance == ntwkB.ports[k].impedance)
 
-reflection_coefficient(Z1, Z2) = (Z2 - Z1) / (Z2 + Z1)
-transmission_coefficient(Z1, Z2) = 1 + reflection_coefficient(Z1, Z2)
+"""
+    reflection_coefficient(Z1::Number, Z2::Number)
+Reflection coefficient of an impedance step from Z1 to Z2
+```
+     Z2 - Z1
+ρ = ---------
+     Z2 + Z1
+```
+"""
+reflection_coefficient(Z1::Number, Z2::Number) = (Z2 - Z1) / (Z2 + Z1)
+reflection_coefficient(Z1::Impedance, Z2::Impedance) =
+    reflection_coefficient(Z1.data, Z2.data)
+
+"""
+    transmission_coefficient(Z1::Number, Z2::Number)
+Transmission coefficient of an impedance step from Z1 to Z2
+```
+         Z2 - Z1      2 Z2
+τ = 1 + --------- = ---------
+         Z2 + Z1     Z2 + Z1
+```
+"""
+transmission_coefficient(Z1::Number, Z2::Number) =
+    1 + reflection_coefficient(Z1, Z2)
+transmission_coefficient(Z1::Impedance, Z2::Impedance) =
+    transmission_coefficient(Z1.data, Z2.data)
+
+"""
+    impedance_step(Z1, Z2)
+S parameter for impedance step from Z1 to Z2.
+```
+S11 = reflection_coefficient(Z1, Z2), S12 = transmission_coefficient(Z2, Z1)
+S21 = transmission_coefficient(Z1, Z2), S22 = reflection_coefficient(Z2, Z1)
+```
+"""
 impedance_step(Z1, Z2) =
     Sparams([reflection_coefficient(Z1, Z2) transmission_coefficient(Z2, Z1);
         transmission_coefficient(Z1, Z2) reflection_coefficient(Z2, Z1)])
 
-check_two_port(ntwk::NetworkData{T}) where {T<:NetworkParams} =
+check_is_two_port(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
     (ntwk.nPort == 2)
-check_is_uniform(ntwk::NetworkData{T}) where {T<:NetworkParams} =
+check_is_uniform(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
     (ntwk.is_uniform == true)
 
 """
-    connect_ports(ntwkA::NetworkData{T}, k::Int,
-        ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
+    connect_ports(ntwkA::NetworkData{S1, T1}, k::Int,
+        ntwkB::NetworkData{S2, T2}, l::Int) where {S1<:Real, S2<:Real,
+        T1<:NetworkParams, T2<:NetworkParams}
 Connect `k`-th port of `ntwkA` and `l`-th port of `ntwkB`. Note that an
 impedance step is inserted between connecting ports if port impedances are not
 identical.
 """
-function connect_ports(ntwkA::NetworkData{T}, k::Int,
-    ntwkB::NetworkData{S}, l::Int) where {T<:NetworkParams, S<:NetworkParams}
+function connect_ports(ntwkA::NetworkData{S1, T1}, k::Int,
+    ntwkB::NetworkData{S2, T2}, l::Int) where {S1<:Real, S2<:Real,
+    T1<:NetworkParams, T2<:NetworkParams}
     ZA, ZB = impedances(ntwkA), impedances(ntwkB)
-    ntwkA_S, ntwkB_S = (convert(NetworkData{Sparams}, ntwkA),
-        convert(NetworkData{Sparams}, ntwkB))
+    ntwkA_S, ntwkB_S = convert(Sparams, ntwkA), convert(Sparams, ntwkB)
 
     if ~ check_port_impedance_identical(ntwkA_S, k, ntwkB_S, l)
         stepNetwork = NetworkData([ntwkA_S.ports[k], ntwkB_S.ports[l]],
@@ -46,7 +81,8 @@ function connect_ports(ntwkA::NetworkData{T}, k::Int,
 end
 
 """
-    innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
+    innerconnect_ports(ntwk::NetworkData{S, T}, k::Int, l::Int) where
+        {S<:Real, T<:NetworkParams}
 Innerconnect `k`-th and `l`-th ports of a single n-port network with following
 S-parameter formula:
 ```
@@ -57,11 +93,12 @@ S′ᵢⱼ = Sᵢⱼ + ---------------------------------------------------------
 Note that an impedance step is inserted between connecting ports if port
 impedances are not identical.
 """
-function innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:NetworkParams}
+function innerconnect_ports(ntwk::NetworkData{S, T}, k::Int, l::Int) where
+    {S<:Real, T<:NetworkParams}
     k, l = sort([k, l])
     Z = impedances(ntwk)
     nPort = ntwk.nPort
-    ntwk_S = convert(NetworkData{Sparams}, ntwk)
+    ntwk_S = convert(Sparams, ntwk)
     if ~ check_port_impedance_identical(ntwk_S, k, ntwk_S, l)
         stepNetwork = NetworkData([ntwk.ports[k], ntwk.ports[l]], ntwk.frequency,
             [impedance_step(Z[k], Z[l]) for n in 1:ntwk.nPoint])
@@ -77,7 +114,8 @@ function innerconnect_ports(ntwk::NetworkData{T}, k::Int, l::Int) where {T<:Netw
     end
 end
 
-function _innerconnect_S(ntwk::NetworkData{Sparams}, k::Int, l::Int)
+function _innerconnect_S(ntwk::NetworkData{S, Sparams{T}}, k::Int, l::Int) where
+    {S<:Real, T<:Number}
     k, l = sort([k, l])
     nPort, nPoint = ntwk.nPort, ntwk.nPoint
     ports = deepcopy(ntwk.ports)
