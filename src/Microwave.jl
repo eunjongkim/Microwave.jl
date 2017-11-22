@@ -9,6 +9,7 @@ const MFloat = BigFloat
 #using Touchstone
 include(joinpath("Circuit", "Circuit.jl"))
 include(joinpath("Circuit", "convert.jl"))
+include(joinpath("Circuit", "RLC.jl"))
 
 # Definitions of NetworkParams, NetworkData
 include(joinpath("Network", "NetworkParams.jl"))
