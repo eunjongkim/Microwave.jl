@@ -106,7 +106,7 @@ function _S_to_ABCD(s::NetworkData{S, Sparams{T}}) where {S<:Real, T<:Number}
     if s.nPort != 2
         error("Error: ABCD-parameters are defined only for 2-port networks")
     end
-    if s.is_uniform == false
+    if is_uniform(s) == false
         error("Error: The port impedances of a ABCDparams must be uniform")
     end
     Z₀ = impedances(s)[1]

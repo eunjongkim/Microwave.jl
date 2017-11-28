@@ -18,7 +18,6 @@ struct Port
         new(port_counter(), impedance)
 end
 ```
-    Port
 `index`: global index of the port. A port index unique in the system is
 assigned whenever an instance of `Port` is created.
 `impedance`: impedance of the port.

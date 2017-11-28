@@ -1,18 +1,18 @@
 for f in (:+, :-, :*, :/), p in (:Impedance, :Admittance)
     # Operation between CircuitParams
-    @eval ($f)(p1::($p){T}, p2::($p){T}) where {T<:Number} =
+    @eval ($f)(p1::($p){T}, p2::($p){T}) where {T<:Real} =
         ($p)(($f)(p1.data, p2.data))
-    @eval ($f)(p1::($p){T}, p2::($p){S}) where {T<:Number, S<:Number} =
+    @eval ($f)(p1::($p){T}, p2::($p){S}) where {T<:Real, S<:Real} =
         ($p)(($f)(promote(p1.data, p2.data)...))
-    @eval ($f)(x::Number, param::($p){T}) where {T<:Number} =
+    @eval ($f)(x::Number, param::($p){T}) where {T<:Real} =
         ($p)(($f)(x, param.data))
-    @eval ($f)(param::($p){T}, x::Number) where {T<:Number} =
+    @eval ($f)(param::($p){T}, x::Number) where {T<:Real} =
         ($p)(($f)(param.data, x))
 end
 
 
-^(z::Impedance{T}, n::Number) where {T<:Number} = Impedance(^(z.data, n))
-^(y::Admittance{T}, n::Number) where {T<:Number} = Impedance(^(y.data, n))
+^(z::Impedance{T}, n::Number) where {T<:Real} = Impedance(^(z.data, n))
+^(y::Admittance{T}, n::Number) where {T<:Real} = Impedance(^(y.data, n))
 
 ∥(x1::Number, x2::Number, x3::Number...) = 1 / +([1/x for x in [x1, x2, x3...]]...)
 """

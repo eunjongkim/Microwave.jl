@@ -6,22 +6,22 @@ import Base: +, -, *, /, ^, convert, promote_rule, show
 export CircuitParams, Impedance, Admittance, CircuitData, ∥
 export capacitor, inductor, resistor
 
-abstract type CircuitParams{T<:Number} <: AbstractParams end
+abstract type CircuitParams{T<:Real} <: AbstractParams end
 
-mutable struct Impedance{T<:Number} <: CircuitParams{T}
-    data::T
+mutable struct Impedance{T<:Real} <: CircuitParams{T}
+    data::Complex{T}
 end
 Impedance(zd::AbstractVector{T}) where {T<:Number} = [Impedance(zd_) for zd_ in zd]
 
-mutable struct Admittance{T<:Number} <: CircuitParams{T}
-    data::T
+mutable struct Admittance{T<:Real} <: CircuitParams{T}
+    data::Complex{T}
 end
 Admittance(yd::AbstractVector{T}) where {T<:Number} = [Admittance(yd_) for yd_ in yd]
 
 
 
 mutable struct CircuitData{S<:Real, T<:CircuitParams} <: AbstractData
-    nPoint::Int
+    nPoint::Integer
     frequency::Vector{S}
     params::Vector{T}
     CircuitData(frequency::AbstractVector{S},
@@ -34,7 +34,7 @@ function show(io::IO, D::CircuitData{S, T}) where {S<:Real, T<:CircuitParams}
     write(io, "  Number of datapoints = $(D.nPoint)\n")
 end
 
-getindex(D::CircuitData{S, T}, I::Int) where {S<:Real, T<:CircuitParams} =
+getindex(D::CircuitData{S, T}, I::Integer) where {S<:Real, T<:CircuitParams} =
     D.params[I].data
 getindex(D::CircuitData{S, T}, I::Range) where {S<:Real, T<:CircuitParams} =
     [D.params[n].data for n in I]
