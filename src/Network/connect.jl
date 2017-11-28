@@ -48,10 +48,8 @@ impedance_step(Z1, Z2) =
     Sparams([reflection_coefficient(Z1, Z2) transmission_coefficient(Z2, Z1);
         transmission_coefficient(Z1, Z2) reflection_coefficient(Z2, Z1)])
 
-check_is_two_port(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
+is_two_port(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
     (ntwk.nPort == 2)
-check_is_uniform(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
-    (ntwk.is_uniform == true)
 
 """
     connect_ports(ntwkA::NetworkData{S1, T1}, k::Int,

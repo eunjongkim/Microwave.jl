@@ -10,30 +10,36 @@ let
 end
 
 """
+```
+struct Port
+    index::Integer
+    impedance::Impedance
+    Port(impedance::Impedance{T}) where {T<:Number} =
+        new(port_counter(), impedance)
+end
+```
     Port
 `index`: global index of the port. A port index unique in the system is
 assigned whenever an instance of `Port` is created.
 `impedance`: impedance of the port.
 """
 struct Port
-    index::Int
+    index::Integer
     impedance::Impedance
     Port(impedance::Impedance{T}) where {T<:Number} =
         new(port_counter(), impedance)
 end
 Port(impedance::Number) = Port(Impedance(impedance))
 
-
-
-# check_is_uniform(ports::Vector{Port{T}}) where {T<:Number} =
+is_uniform(ports::Vector{Port}) =
+    all(n -> (ports[1].impedance == ports[n].impedance), 1:nPort)
 
 """
     NetworkData{S<:Real, T<:NetworkParams}
 """
 mutable struct NetworkData{S<:Real, T<:NetworkParams} <: AbstractData
-    nPort::Int
-    nPoint::Int
-    is_uniform::Bool
+    nPort::Integer
+    nPoint::Integer
     ports::Vector{Port}
     frequency::Vector{S}
     params::Vector{T}
@@ -41,7 +47,6 @@ mutable struct NetworkData{S<:Real, T<:NetworkParams} <: AbstractData
         params::Vector{T}) where {S<:Real, T<:NetworkParams}
         nPoint = length(frequency)
         nPort = length(ports)
-        is_uniform = all(n -> (ports[1].impedance == ports[n].impedance), 1:nPort)
         if (length(params) != nPoint) | (length(frequency) != nPoint)
             error("NetworkData Error: the number of data points doesn't match with number of frequency points")
         end
@@ -54,13 +59,17 @@ mutable struct NetworkData{S<:Real, T<:NetworkParams} <: AbstractData
             # if nPort != 2
             #     error("TwoPortParams Error: the number of ports must be equal to 2 for `TwoPortParams`")
             # end
-            if is_uniform == false
+            if is_uniform(ports) == false
                 error("TwoPortParams Error: two-port parameters are defined only for uniform port impedances")
             end
         end
-        new{S, T}(nPort, nPoint, is_uniform, ports, frequency, params)
+        new{S, T}(nPort, nPoint, ports, frequency, params)
     end
 end
+
+is_uniform(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
+    is_uniform(ntwk.ports)
+
 
 """
     NetworkData(frequency, params; port_impedance=50.0)
@@ -95,21 +104,21 @@ integer vector, mask, or colon(:) that determines which datapoint to choose.
 i.e., `D[(i, j), n]` returns the n-th data of parameter Tᵢⱼ
 where T∈{S,Y,Z,ABCD,...}.
 """
-getindex(D::NetworkData{S, T}, I1::Tuple{Int, Int},
-    I2::Int) where {S<:Real, T<:NetworkParams} = D.params[I2].data[I1...]
-getindex(D::NetworkData{S, T}, I1::Tuple{Int, Int},
+getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer},
+    I2::Integer) where {S<:Real, T<:NetworkParams} = D.params[I2].data[I1...]
+getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer},
     I2::Range) where {S<:Real, T<:NetworkParams} = [D.params[n].data[I1...] for n in I2]
-getindex(D::NetworkData{S, T}, I1::Tuple{Int, Int},
+getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer},
     I2::Vector) where {S<:Real, T<:NetworkParams} =
     [D.params[n].data[I1...] for n in I2]
-getindex(D::NetworkData{S, T}, I1::Tuple{Int, Int},
+getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer},
     I2::Vector{Bool}) where {S<:Real, T<:NetworkParams} =
     (length(D.params) == length(I2))?
     [D.params[n].data[I1...] for n in Base.LogicalIndex(I2)]:
     error("Length of the mask different from lenghth of the array attemped to access")
-getindex(D::NetworkData{S, T}, I1::Tuple{Int, Int},
+getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer},
     I2::Colon) where {S<:Real, T<:NetworkParams} = getindex(D, I1, 1:length(D.params))
-getindex(D::NetworkData{S, T}, I1::Tuple{Int, Int}) where {S<:Real, T<:NetworkParams} =
+getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer}) where {S<:Real, T<:NetworkParams} =
     getindex(D, I1, :)
 # setindex!: TODO
 #
