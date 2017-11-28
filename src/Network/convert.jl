@@ -85,17 +85,14 @@ Conversion from ABCD-parameters to S-parameters
 """
 function _ABCD_to_S(abcd::NetworkData{S, ABCDparams{T}}) where {S<:Real, T<:Number}
     Z₀ = impedances(abcd)[1]
-    s = Vector{Sparams}(length(abcd.params))
-    # converting ABCD matrix into scattering matrix
-    for n in 1:abcd.nPoint
-        (A, B, C, D) = (abcd[(1, 1), n], abcd[(1, 2), n],
-            abcd[(2, 1), n], abcd[(2, 2), n])
+    s = [begin
+        (A, B, C, D) = (abcd[(1, 1), n], abcd[(1, 2), n], abcd[(2, 1), n], abcd[(2, 2), n])
         S11 = (A + B / Z₀ - C * Z₀ - D) / (A + B / Z₀ + C * Z₀ + D)
         S12 = 2 * (A * D - B * C) / (A + B / Z₀ + C * Z₀ + D)
         S21 = 2 / (A + B / Z₀ + C * Z₀ + D)
         S22 = (-A + B / Z₀ - C * Z₀ + D) / (A + B / Z₀ + C * Z₀ + D)
-        s[n] = Sparams([S11 S12; S21 S22])
-    end
+        Sparams([S11 S12; S21 S22])
+        end for n in 1:abcd.nPoint]
     return NetworkData(abcd.ports, abcd.frequency, s)
 end
 
@@ -110,15 +107,13 @@ function _S_to_ABCD(s::NetworkData{S, Sparams{T}}) where {S<:Real, T<:Number}
         error("Error: The port impedances of a ABCDparams must be uniform")
     end
     Z₀ = impedances(s)[1]
-    abcd = Vector{ABCDparams}(length(s.params))  # converting S-parameters into ABCD parameters
-    for n in 1:s.nPoint
-        (S11, S12, S21, S22) = (s[(1, 1), n], s[(1, 2), n],
-            s[(2, 1), n], s[(2, 2), n])
-        A = ((1 + S11) * (1 - S22) + S12 * S21) / (2 * S21)
-        B = Z₀ * ((1 + S11) * (1 + S22) - S12 * S21) / (2 * S21)
-        C = 1 / Z₀ * ((1 - S11) * (1 - S22) - S12 * S21) / (2 * S21)
-        D = ((1 - S11) * (1 + S22) + S12 * S21) / (2 * S21)
-        abcd[n] = ABCDparams([A B; C D])
-    end
+    abcd = [begin
+    (S11, S12, S21, S22) = (s[(1, 1), n], s[(1, 2), n], s[(2, 1), n], s[(2, 2), n])
+    A = ((1 + S11) * (1 - S22) + S12 * S21) / (2 * S21)
+    B = Z₀ * ((1 + S11) * (1 + S22) - S12 * S21) / (2 * S21)
+    C = 1 / Z₀ * ((1 - S11) * (1 - S22) - S12 * S21) / (2 * S21)
+    D = ((1 - S11) * (1 + S22) + S12 * S21) / (2 * S21)
+    ABCDparams([A B; C D])
+    end for n in 1:s.nPoint]  # converting S-parameters into ABCD parameters
     return NetworkData(s.ports, s.frequency, abcd)
 end
