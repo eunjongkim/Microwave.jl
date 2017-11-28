@@ -138,7 +138,8 @@ end
 Connect two network data specified by S parameters.
 """
 function _connect_S(A::NetworkData{S1, Sparams{T1}}, k::Integer,
-    B::NetworkData{S2, Sparams{T2}}, l::Integer)
+    B::NetworkData{S2, Sparams{T2}}, l::Integer) where {S1<:Real, S2<:Real,
+    T1<:Number, T2<:Number}
     nA, nB = A.nPort, B.nPort
     nPoint = check_frequency_identical(A, B)?
          A.nPoint : error("Frequency Error: The frequency points of two network data doesn't match")

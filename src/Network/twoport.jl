@@ -38,7 +38,7 @@ port 1   | Y |  port 2
 ```
 """
 parallel_network(Y::CircuitParams) =
-    ABCDparams([1.0 0.0; convert(Admittance, Y).data 1.0])
+    ABCDparams([1 0; convert(Admittance, Y).data 1])
 """
     parallel_network(D::CircuitData{T}) where {T<:CircuitParams}
 Promote `Vector{CircuitParams}` to `Vector{ABCDparams}` assuming parallel
@@ -64,9 +64,9 @@ Promote `CircuitParams` to `Sparams` assuming terminated connection to ground.
 ◁───┴─────────○
 ```
 """
-function terminated_network(Z::CircuitParams; Z0=50.0)
-    d = zeros(Complex{MFloat}, (1, 1))
-    d[1, 1] = reflection_coefficient(Z0, convert(Impedance, Z).data)
+function terminated_network(Z::Impedance{T}; Z0=50.0) where {T<:Number}
+    d = [reflection_coefficient(Z0, convert(Impedance, Z).data) for i in 1:1,
+        j in 1:1]
     return Sparams(d)
 end
 """
@@ -74,7 +74,7 @@ end
 Promote `Vector{CircuitParams}` to `Vector{Sparams}` assuming terminated
 connection to ground.
 """
-terminated_network(Z::Array{T, 1}; Z0=50.0) where {T<:CircuitParams} =
+terminated_network(Z::Vector{T}; Z0=50.0) where {T<:CircuitParams} =
     [terminated_network(Z[idx]; Z0=Z0) for idx in 1:length(Z)]
 """
     terminated_network(D::CircuitData{T}; Z0=50.0) where {T<:CircuitParams}
@@ -119,8 +119,7 @@ assuming Π-network configuration.
 Promote `CircuitData` D1, D2, and D3 to `NetworkData{ABCDparams}` assuming
 Π-network configuration. Supported only for data with same frequency range.
 """
-π_network(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
-    {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
+π_network(D1::CircuitData, D2::CircuitData, D3::CircuitData) =
     check_frequency_identical(D1, D2, D3) ?
     NetworkData(D1.frequency, π_network(D1.params, D2.params, D3.params)) :
     error("`NetworkData` can only be constructed for `CircuitData` defined in same frequencies")
@@ -161,8 +160,7 @@ t_network(Z1::Array{T, 1}, Z2::Array{S, 1}, Z3::Array{U, 1}) where
 Promote `CircuitData` D1, D2, and D3 to `NetworkData{ABCDparams}` assuming
 T-network configuration. Supported only for data with same frequency range.
 """
-t_network(D1::CircuitData{T}, D2::CircuitData{S}, D3::CircuitData{U}) where
-    {T<:CircuitParams, S<:CircuitParams, U<:CircuitParams} =
+t_network(D1::CircuitData, D2::CircuitData, D3::CircuitData) =
     check_frequency_identical(D1, D2, D3) ?
     NetworkData(D1.frequency, Tnetwork(D1.params, D2.params, D3.params)) :
     error("`NetworkData` can only be constructed for `CircuitData` defined in same frequencies")
