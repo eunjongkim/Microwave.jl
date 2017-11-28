@@ -18,10 +18,7 @@ mutable struct Admittance{T<:Number} <: CircuitParams{T}
 end
 Admittance(yd::AbstractVector{T}) where {T<:Number} = [Admittance(yd_) for yd_ in yd]
 
-promote_rule(::Type{Impedance{T}}, ::Type{Impedance{S}}) where {T<:Number, S<:Number} =
-    Impedance{promote_type(T, S)}
-promote_rule(::Type{Admittance{T}}, ::Type{Admittance{S}}) where {T<:Number, S<:Number} =
-    Admittance{promote_type(T, S)}
+
 
 mutable struct CircuitData{S<:Real, T<:CircuitParams} <: AbstractData
     nPoint::Int

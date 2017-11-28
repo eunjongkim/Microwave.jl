@@ -1,24 +1,15 @@
-for f in (:+, :-, :*, :/)
+for f in (:+, :-, :*, :/), p in (:Impedance, :Admittance)
     # Operation between CircuitParams
-    @eval ($f)(z1::Impedance{T}, z2::Impedance{T}) where {T<:Number} =
-        Impedance(($f)(z1.data, z2.data))
-    @eval ($f)(z1::Impedance{T}, z2::Impedance{S}) where {T<:Number, S<:Number} =
-        ($f)(promote(z1, z2)...)
-    @eval ($f)(y1::Admittance{T}, y2::Admittance{T}) where {T<:Number} =
-        Admittance(($f)(y1.data, y2.data))
-    @eval ($f)(y1::Admittance{T}, y2::Admittance{S}) where {T<:Number, S<:Number} =
-        ($f)(promote(y1, y2)...)
-
-    # Operation between CircuitParams and numbers
-    @eval ($f)(x::Number, z::Impedance{T}) where {T<:Number} =
-        Impedance(($f)(x, z.data))
-    @eval ($f)(z::Impedance{T}, x::Number) where {T<:Number} =
-        Impedance(($f)(z.data, x))
-    @eval ($f)(x::Number, y::Admittance{T}) where {T<:Number} =
-        Impedance(($f)(x, y.data))
-    @eval ($f)(y::Admittance{T}, x::Number) where {T<:Number} =
-        Impedance(($f)(y.data, x))
+    @eval ($f)(p1::($p){T}, p2::($p){T}) where {T<:Number} =
+        ($p)(($f)(p1.data, p2.data))
+    @eval ($f)(p1::($p){T}, p2::($p){S}) where {T<:Number, S<:Number} =
+        ($p)(($f)(promote(p1.data, p2.data)...))
+    @eval ($f)(x::Number, param::($p){T}) where {T<:Number} =
+        ($p)(($f)(x, param.data))
+    @eval ($f)(param::($p){T}, x::Number) where {T<:Number} =
+        ($p)(($f)(param.data, x))
 end
+
 
 ^(z::Impedance{T}, n::Number) where {T<:Number} = Impedance(^(z.data, n))
 ^(y::Admittance{T}, n::Number) where {T<:Number} = Impedance(^(y.data, n))
