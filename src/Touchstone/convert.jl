@@ -1,6 +1,4 @@
-convert(::Type{NetworkData{Sparams}}, R::Touchstone) = _Raw_to_S(R)
-convert(::Type{T}, D::Touchstone) where {T<:NetworkParams} =
-    convert(NetworkData{T}, D)
+convert(::Type{Sparams}, R::Touchstone) = _Raw_to_S(R)
 
 """
 Conversion from `Touchstone` to `NetworkData{Sparams}`

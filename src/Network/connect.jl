@@ -1,5 +1,3 @@
-export connect_ports, innerconnect_ports, cascade
-export reflection_coefficient, transmission_coefficient, impedance_step
 
 check_frequency_identical(ntwkA::NetworkData{S1, T1},
     ntwkB::NetworkData{S2, T2}) where {S1<:Real, S2<:Real, T1<:NetworkParams,
@@ -118,62 +116,60 @@ function _innerconnect_S(ntwk::NetworkData{S, Sparams{T}}, k::Int, l::Int) where
     nPort, nPoint = ntwk.nPort, ntwk.nPoint
     ports = deepcopy(ntwk.ports)
     deleteat!(ports, [k, l])  # remove ports that are innerconnected
-    params = Vector{Sparams}(nPoint)
+
     newind = vcat(1:(k-1), (k+1):(l-1), (l+1):nPort)
-    for n in 1:nPoint
-        tmp = zeros(Complex{MFloat}, (nPort, nPort))
-        S = ntwk.params[n].data
-        for i in newind, j in newind
-            tmp[i, j] = S[i, j] +
-                (S[k, j] * S[i, l] * (1 - S[l, k]) +
-                 S[l, j] * S[i, k] * (1 - S[k, l]) +
-                 S[k, j] * S[l, l] * S[i, k] +
-                 S[l, j] * S[k, k] * S[i, l]) /
-                ((1 - S[k, l]) * (1 - S[l, k]) - S[k, k] * S[l, l])
-        end
-        params[n] = Sparams(tmp[newind, newind])
+    params = [begin
+    tmp = zeros(T, (nPort, nPort))
+    S = ntwk.params[n].data
+    for i in newind, j in newind
+        tmp[i, j] = S[i, j] +
+            (S[k, j] * S[i, l] * (1 - S[l, k]) +
+             S[l, j] * S[i, k] * (1 - S[k, l]) +
+             S[k, j] * S[l, l] * S[i, k] +
+             S[l, j] * S[k, k] * S[i, l]) /
+            ((1 - S[k, l]) * (1 - S[l, k]) - S[k, k] * S[l, l])
     end
+    Sparams(tmp[newind, newind])
+    end for n in 1:nPoint]
     return NetworkData(ports, ntwk.frequency, params)
 end
 
 """
 Connect two network data specified by S parameters.
 """
-function _connect_S(A::NetworkData{Sparams}, k::Int,
-    B::NetworkData{Sparams}, l::Int)
+function _connect_S(A::NetworkData{S1, Sparams{T1}}, k::Integer,
+    B::NetworkData{S2, Sparams{T2}}, l::Integer)
     nA, nB = A.nPort, B.nPort
     nPoint = check_frequency_identical(A, B)?
          A.nPoint : error("Frequency Error: The frequency points of two network data doesn't match")
     portsA, portsB = deepcopy(A.ports), deepcopy(B.ports)
     ports = vcat(portsA, portsB)
     # Create a supernetwork containing `A` and `B`
-    params = Vector{Sparams}(nPoint)
-    for n in 1:nPoint
-        tmp = zeros(Complex{MFloat}, (nA+nB, nA+nB))
+    params = [begin
+        tmp = zeros(promote_type(T1, T2)[1], (nA+nB, nA+nB))
         tmp[1:nA, 1:nA] = A.params[n].data
         tmp[(nA+1):(nA+nB), (nA+1):(nA+nB)] = B.params[n].data
-        params[n] = Sparams(tmp)
-    end
+    Sparams(tmp)
+    end for n in 1:nPoint]
     return _innerconnect_S(NetworkData(ports, A.frequency, params), k, nA + l)
 end
 
 """
-    cascade(ntwk::NetworkData{ABCDparams}, N::Int)
-Cascade a 2-port network data `Data::NetworkData{T}` `N::Int` times
+    cascade(ntwk::NetworkData{S, ABCDparams{T}}, N::Integer) where {S<:Real, T<:Number}
+Cascade a 2-port network data `Data` `N` times
 """
-cascade(ntwk::NetworkData{ABCDparams}, N::Int) =
+cascade(ntwk::NetworkData{S, ABCDparams{T}}, N::Integer) where {S<:Real, T<:Number} =
     NetworkData(ntwk.ports, ntwk.frequency, [p^N for p in ntwk.params])
-cascade(ntwk::NetworkData{T}, N::Int) where {T<:NetworkParams} =
+cascade(ntwk::NetworkData{S, T}, N::Integer) where {S<:Real, T<:NetworkParams} =
     convert(T, cascade(convert(ABCDparams, ntwk), N))
 
 """
-    cascade(ntwk1::NetworkData{ABCDparams}, ntwk2::NetworkData{ABCDparams},
-        ntwk3::NetworkData{ABCDparams}...)
+    cascade(ntwk1::NetworkData, ntwk2::NetworkData, ntwk3::NetworkData...)
 Cascade 2-port networks.
 """
-function cascade(ntwk1::NetworkData{ABCDparams}, ntwk2::NetworkData{ABCDparams},
-    ntwk3::NetworkData{ABCDparams}...)
+function cascade(ntwk1::NetworkData, ntwk2::NetworkData,
+    ntwk3::NetworkData...)
     ntwks = [ntwk1, ntwk2, ntwk3...]
     return NetworkData(ntwk1.ports, ntwk1.frequency,
-        .*([ntwk.params for ntwk in ntwks]...))
+        .*([convert(ABCDparams, ntwk).params for ntwk in ntwks]...))
 end

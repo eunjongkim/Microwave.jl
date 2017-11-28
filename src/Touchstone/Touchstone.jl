@@ -20,7 +20,7 @@ end
 Read information (frequency unit, data type, format type, impedance)
 and data from a touchstone (.sNp) file.
 """
-function read_touchstone(filepath::AbstractString; raw=false)
+function read_touchstone(filepath::AbstractString; raw=false, datatype=Float64)
     f = open(filepath, "r")
     # println("Reading touchstone file ", filepath, " ...")
 

@@ -20,7 +20,7 @@ Sparams(P::Vector{Array{T, 2}}) where {T<:Number} = [Sparams(p) for p in P]
 
 """
     Yparams(nPort, data) <: NetworkParams
-Admittance-parameters for microwave network
+Admittance parameters for microwave network
 """
 mutable struct Yparams{T<:Number} <: NetworkParams{T}
     nPort::Int

@@ -1,5 +1,4 @@
 # See Table 4.1 of Pozar, Microwave Engineering
-export series_network, parallel_network, terminated_network, π_network, t_network
 
 """
     series_network(Z::CircuitParams)
@@ -12,7 +11,7 @@ port 1  └────┘  port 2
 ```
 """
 series_network(Z::CircuitParams) =
-    ABCDparams([1.0 convert(Impedance, Z).data; 0.0 1.0])
+    ABCDparams([1 convert(Impedance, Z).data; 0 1])
 """
     series_network(D::CircuitData{T}) where {T<:CircuitParams}
 Promote `Vector{CircuitParams}` to `Vector{ABCDparams}` assuming series
