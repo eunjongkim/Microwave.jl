@@ -22,6 +22,8 @@ struct Port{T<:Number}
     Port(impedance) = new(port_counter(), impedance)
 end
 
+# check_is_uniform(ports::Vector{Port{T}}) where {T<:Number} =
+
 """
     NetworkData{T<:NetworkParams}
 """
