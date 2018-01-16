@@ -6,13 +6,13 @@ Conversion from `Touchstone` to `NetworkData{Sparams}`
 function _Raw_to_S(touchstone::Touchstone; Z0=50.0)
     nPort = touchstone.nPort
     nPoint = touchstone.nPoint
-    Z₀ = touchstone.impedance
+    Z0 = touchstone.impedance
     freq_unit = touchstone.freq_unit
     data_type = touchstone.data_type
     format_type = touchstone.format_type
     data = touchstone.data
 
-    ports = [Port(Z₀) for n in 1:nPort]
+    ports = [Port(Z0) for n in 1:nPort]
     if data_type != "S"
         error("Data type not a scattering parameter")
     else

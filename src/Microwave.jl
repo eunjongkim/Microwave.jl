@@ -17,18 +17,18 @@ export Circuit
 export CircuitParams, Impedance, Admittance, CircuitData, ∥,
     resistor, inductor, capacitor
 
-# include(joinpath("Network", "Network.jl"))
-# import .Network: NetworkParams, Sparams, Yparams, Zparams, TwoPortParams, ABCDparams,
-#      Port, NetworkData, impedances, swap_ports!, permute_ports!, connect_ports,
-#      innerconnect_ports, cascade, reflection_coefficient, transmission_coefficient,
-#      impedance_step, series_network, parallel_network, terminated_network,
-#      π_network, t_network
-# export Network
-# export NetworkParams, Sparams, Yparams, Zparams, TwoPortParams, ABCDparams,
-#      Port, NetworkData, impedances, swap_ports!, permute_ports!, connect_ports,
-#      innerconnect_ports, cascade, reflection_coefficient, transmission_coefficient,
-#      impedance_step, series_network, parallel_network, terminated_network,
-#      π_network, t_network
+include(joinpath("Network", "Network.jl"))
+import .Network: NetworkParams, Sparams, Yparams, Zparams, TwoPortParams, ABCDparams,
+      Port, NetworkData, impedances, swap_ports!, permute_ports!, connect_ports,
+      innerconnect_ports, cascade, reflection_coefficient, transmission_coefficient,
+      impedance_step, series_network, parallel_network, terminated_network,
+      π_network, t_network
+export Network
+export NetworkParams, Sparams, Yparams, Zparams, TwoPortParams, ABCDparams,
+      Port, NetworkData, impedances, swap_ports!, permute_ports!, connect_ports,
+      innerconnect_ports, cascade, reflection_coefficient, transmission_coefficient,
+      impedance_step, series_network, parallel_network, terminated_network,
+      π_network, t_network
 
 # Definitions of NetworkParams, NetworkData
 # include(joinpath("Network", "NetworkParams.jl"))

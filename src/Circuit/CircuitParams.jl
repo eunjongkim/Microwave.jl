@@ -23,3 +23,7 @@ Admittance(y::T) where {T<:Real} = Admittance(complex(y))
 Admittance(yd::AbstractVector{Complex{T}}) where {T<:Real} =
     [Admittance(yd_) for yd_ in yd]
 Admittance(yd::AbstractVector{T}) where {T<:Real} = Admittance(Complex{T}.(yd))
+
+function show(io::IO, params::CircuitParams)
+    write(io, "$(typeof(params)): $(params.data)\n")
+end

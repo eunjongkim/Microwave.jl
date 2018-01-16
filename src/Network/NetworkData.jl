@@ -1,38 +1,4 @@
 
-let
-    state = 0
-    global port_counter
-    """
-        port_counter()
-    Global counter for unique port indices (has to be unique for each port)
-    """
-    port_counter() = state += 1
-end
-
-"""
-```
-struct Port
-    index::Integer
-    impedance::Impedance
-    Port(impedance::Impedance{T}) where {T<:Number} =
-        new(port_counter(), impedance)
-end
-```
-`index`: global index of the port. A port index unique in the system is
-assigned whenever an instance of `Port` is created.
-`impedance`: impedance of the port.
-"""
-struct Port
-    index::Integer
-    impedance::Impedance
-    Port(impedance::Impedance{T}) where {T<:Number} =
-        new(port_counter(), impedance)
-end
-Port(impedance::Number) = Port(Impedance(impedance))
-
-is_uniform(ports::Vector{Port}) =
-    all(n -> (ports[1].impedance == ports[n].impedance), 1:nPort)
-
 """
     NetworkData{S<:Real, T<:NetworkParams}
 """
@@ -54,10 +20,6 @@ mutable struct NetworkData{S<:Real, T<:NetworkParams} <: AbstractData
         end
 
         if T<:TwoPortParams
-            # This tested by inner constructor for TwoPortParams
-            # if nPort != 2
-            #     error("TwoPortParams Error: the number of ports must be equal to 2 for `TwoPortParams`")
-            # end
             if is_uniform(ports) == false
                 error("TwoPortParams Error: two-port parameters are defined only for uniform port impedances")
             end

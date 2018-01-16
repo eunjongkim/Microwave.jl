@@ -2,10 +2,10 @@ export Touchstone, read_touchstone
 """
 Touchstone data in its raw form, imported from a touchstone file `*.sNp`
 """
-struct Touchstone
+struct Touchstone{T<:Real}
     nPort::Int
     nPoint::Int
-    impedance::Float64
+    impedance::T
     freq_unit::String
     data_type::String
     format_type::String
@@ -13,14 +13,15 @@ struct Touchstone
 end
 
 function show(io::IO, x::Touchstone)
-    write(io, "$(x.nPort)-Port $(x.nPoint) Points Touchstone with impedance = $(x.impedance), Freq Unit: $(x.freq_unit), Data Type: $(x.data_type), Format Type: $(x.format_type)")
+    write(io, "$(x.nPort)-Port $(x.nPoint) Point Touchstone with impedance = $(x.impedance), Freq Unit: $(x.freq_unit), Data Type: $(x.data_type), Format Type: $(x.format_type)")
 end
 
 """
 Read information (frequency unit, data type, format type, impedance)
 and data from a touchstone (.sNp) file.
 """
-function read_touchstone(filepath::AbstractString; raw=false, datatype=Float64)
+function read_touchstone(filepath::AbstractString;
+    raw=false, floattype=Float64::Type{T}) where {T<:AbstractFloat}
     f = open(filepath, "r")
     # println("Reading touchstone file ", filepath, " ...")
 
@@ -57,7 +58,7 @@ function read_touchstone(filepath::AbstractString; raw=false, datatype=Float64)
                 end
             end
             if line != ""
-                data_vec = [parse(Float64, d) for d in split(line)]
+                data_vec = [parse(floattype, d) for d in split(line)]
             end
             data = [data..., data_vec]
         else
@@ -73,7 +74,7 @@ function read_touchstone(filepath::AbstractString; raw=false, datatype=Float64)
         return touchstone
     else
         if data_type == "S"
-            return convert(NetworkData{Sparams}, touchstone)
+            return convert(NetworkData{Sparams}, touchstone; Z0=impedance)
         end
     end
 end
