@@ -1,9 +1,9 @@
-convert(::Type{Sparams}, R::Touchstone) = _Raw_to_S(R)
+convert(::Type{Sparams}, R::Touchstone; Z0=50.0) = _Raw_to_S(R; Z0=Z0)
 
 """
 Conversion from `Touchstone` to `NetworkData{Sparams}`
 """
-function _Raw_to_S(touchstone::Touchstone)
+function _Raw_to_S(touchstone::Touchstone; Z0=50.0)
     nPort = touchstone.nPort
     nPoint = touchstone.nPoint
     Z₀ = touchstone.impedance
