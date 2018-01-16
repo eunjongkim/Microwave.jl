@@ -1,13 +1,18 @@
-for f in (:+, :-, :*, :/), p in (:Impedance, :Admittance)
-    # Operation between CircuitParams
-    @eval ($f)(p1::($p){T}, p2::($p){T}) where {T<:Real} =
-        ($p)(($f)(p1.data, p2.data))
-    @eval ($f)(p1::($p){T}, p2::($p){S}) where {T<:Real, S<:Real} =
-        ($p)(($f)(promote(p1.data, p2.data)...))
-    @eval ($f)(x::Number, param::($p){T}) where {T<:Real} =
-        ($p)(($f)(x, param.data))
-    @eval ($f)(param::($p){T}, x::Number) where {T<:Real} =
-        ($p)(($f)(param.data, x))
+for p in (:Impedance, :Admittance)
+    @eval ==(p1::($p){T}, p2::($p){T}) where {T<:Real} = ==(p1.data, p2.data)
+    @eval ==(p1::($p){T}, p2::($p){S}) where {T<:Real, S<:Real} =
+        ==(promote(p1.data, p2.data)...)
+    for f in (:+, :-, :*, :/)
+        # Operation between CircuitParams
+        @eval ($f)(p1::($p){T}, p2::($p){T}) where {T<:Real} =
+            ($p)(($f)(p1.data, p2.data))
+        @eval ($f)(p1::($p){T}, p2::($p){S}) where {T<:Real, S<:Real} =
+            ($p)(($f)(promote(p1.data, p2.data)...))
+            @eval ($f)(x::Number, param::($p){T}) where {T<:Real} =
+            ($p)(($f)(x, param.data))
+        @eval ($f)(param::($p){T}, x::Number) where {T<:Real} =
+            ($p)(($f)(param.data, x))
+    end
 end
 
 

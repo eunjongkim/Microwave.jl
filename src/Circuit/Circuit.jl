@@ -1,7 +1,7 @@
 module Circuit
 
 import Microwave: AbstractParams, AbstractData
-import Base: +, -, *, /, ^, convert, promote_rule, show, getindex
+import Base: +, -, *, /, ^, ==, convert, promote_rule, show, getindex
 
 export CircuitParams, Impedance, Admittance, CircuitData, ∥
 export capacitor, inductor, resistor
