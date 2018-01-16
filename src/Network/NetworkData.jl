@@ -30,6 +30,21 @@ end
 
 is_uniform(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
     is_uniform(ntwk.ports)
+is_two_port(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
+    (ntwk.nPort == 2)
+
+check_frequency_identical(ntwkA::NetworkData, ntwkB::NetworkData,
+    ntwkC::NetworkData...) = begin
+    ntwks = [ntwkA, ntwkB, ntwkC...]
+    freqs = [ntwk.frequency for ntwk in ntwks]
+    # foldl doesn't seem to work reliably here
+    # foldl(==, freqs)
+    all(n -> (freqs[1] == freqs[n]), 1:length(freqs))
+    end
+
+check_port_impedance_identical(ntwkA::NetworkData{S1, T1}, k,
+    ntwkB::NetworkData{S2, T2}, l) where {S1<:Real, S2<:Real, T1<:NetworkParams,
+    T2<:NetworkParams} = (ntwkA.ports[k].Z0 == ntwkB.ports[k].Z0)
 
 
 """
@@ -38,8 +53,8 @@ Convenience constructor for creating a `NetworkData` object of uniform port
 impedances.
 """
 NetworkData(frequency::AbstractVector{S}, params::Vector{T};
-    impedance=Impedance(50.0)) where {S<:Real, T<:NetworkParams} =
-    NetworkData([Port(impedance) for n in 1:params[1].nPort], frequency, params)
+    Z0=50.0) where {S<:Real, T<:NetworkParams} =
+    NetworkData([Port(Z0) for n in 1:params[1].nPort], frequency, params)
 
 """
     show(io::IO, D::NetworkData{T}) where {T<:NetworkParams}
@@ -47,14 +62,13 @@ Pretty-printing of `NetworkData`.
 """
 function show(io::IO, D::NetworkData{S, T}) where {S<:Real, T<:NetworkParams}
     write(io, "$(D.nPort)-port $(typeof(D)):\n")
-    write(io, "  Number of datapoints = $(D.nPoint)\n")
+    write(io, "  # datapoints = $(D.nPoint)\n")
     write(io, "  Port Informaton:\n")
     for (n, p) in enumerate(D.ports)
-        write(io, "    Port $(n) → (index = $(p.index), impedance = $(p.impedance))\n")
+        write(io, "    Port $(n) → (index = $(p.index), Z0 = Impedance($(p.Z0.data)))\n")
     end
 end
 
-impedances(ports::Vector{Port}) = [p.impedance.data for p in ports]
 impedances(D::NetworkData) = impedances(D.ports)
 
 """
@@ -81,5 +95,5 @@ getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer},
     I2::Colon) where {S<:Real, T<:NetworkParams} = getindex(D, I1, 1:length(D.params))
 getindex(D::NetworkData{S, T}, I1::Tuple{Integer, Integer}) where {S<:Real, T<:NetworkParams} =
     getindex(D, I1, :)
-# setindex!: TODO
+# setindex!: TODO?
 #

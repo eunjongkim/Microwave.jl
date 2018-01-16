@@ -10,21 +10,21 @@ port 1  └────┘  port 2
 ○────────────────────○
 ```
 """
-series_network(Z::CircuitParams) =
+series_network(Z::CircuitParams{T}) where {T<:Real} =
     ABCDparams([1 convert(Impedance, Z).data; 0 1])
 """
     series_network(D::CircuitData{T}) where {T<:CircuitParams}
 Promote `Vector{CircuitParams}` to `Vector{ABCDparams}` assuming series
 connection.
 """
-series_network(Z::Array{T, 1}) where {T<:CircuitParams} =
+series_network(Z::Vector{T}) where {T<:CircuitParams} =
     [series_network(Z[idx]) for idx in 1:length(Z)]
 """
     series_network(D::CircuitData{T}) where {T<:CircuitParams}
 Promote `CircuitData` to `NetworkData{ABCDparams}` assuming series connection.
 """
-series_network(D::CircuitData{T}) where {T<:CircuitParams} =
-    NetworkData(D.frequency, series_network(D.params))
+series_network(D::CircuitData{S, T}; Z0=50.0) where {S<:Real, T<:CircuitParams} =
+    NetworkData(D.frequency, series_network(D.params); Z0=Z0)
 
 """
     parallel_network(Y::CircuitParams)
@@ -44,18 +44,18 @@ parallel_network(Y::CircuitParams) =
 Promote `Vector{CircuitParams}` to `Vector{ABCDparams}` assuming parallel
 connection.
 """
-parallel_network(Y::Array{T, 1}) where {T<:CircuitParams} =
+parallel_network(Y::Vector{T}) where {T<:CircuitParams} =
     [parallel_network(Y[idx]) for idx in 1:length(Y)]
 """
     parallel_network(D::CircuitData{T}) where {T<:CircuitParams}
 Promote `CircuitData` to `NetworkData{ABCDparams}` assuming parallel connection.
 """
-parallel_network(D::CircuitData{T}) where {T<:CircuitParams} =
-    NetworkData(D.frequency, parallel_network(D.params))
+parallel_network(D::CircuitData{S, T}; Z0=50.0) where {S<:Real, T<:CircuitParams} =
+    NetworkData(D.frequency, parallel_network(D.params); Z0=Z0)
 
 """
     terminated_network(Z::CircuitParams; Z0=50.0)
-Promote `CircuitParams` to `Sparams` assuming terminated connection to ground.
+Promote `CircuitParams` to `Sparams` assuming termination with impedance `Z`.
 ```
      ┌─────────○
    ┌─┴─┐
@@ -70,9 +70,9 @@ function terminated_network(Z::Impedance{T}; Z0=50.0) where {T<:Number}
     return Sparams(d)
 end
 """
-    terminated_network(Z::Array{T, 1}; Z0=50.0) where {T<:CircuitParams}
-Promote `Vector{CircuitParams}` to `Vector{Sparams}` assuming terminated
-connection to ground.
+    terminated_network(Z::Vector{T}; Z0=50.0) where {T<:CircuitParams}
+Promote `Vector{CircuitParams}` to `Vector{Sparams}` assuming termination
+with impedance `Z0`.
 """
 terminated_network(Z::Vector{T}; Z0=50.0) where {T<:CircuitParams} =
     [terminated_network(Z[idx]; Z0=Z0) for idx in 1:length(Z)]
@@ -81,11 +81,11 @@ terminated_network(Z::Vector{T}; Z0=50.0) where {T<:CircuitParams} =
 Promote `CircuitData` to `NetworkData{Sparams}` assuming terminated
 connection to ground.
 """
-terminated_network(D::CircuitData{T}; Z0=50.0) where {T<:CircuitParams} =
+terminated_network(D::CircuitData{S, T}; Z0=50.0) where {S<:Real, T<:CircuitParams} =
     NetworkData(D.frequency, terminated_network(D.params; Z0=Z0))
 
 """
-    Πnetwork(Y1::CircuitParams, Y2::CircuitParams, Y3::CircuitParams)
+    π_network(Y1::CircuitParams, Y2::CircuitParams, Y3::CircuitParams)
 Promote `CircuitParams` Y1, Y2, and Y3 to `ABCDparams` assuming Π-network
 configuration.
 ```

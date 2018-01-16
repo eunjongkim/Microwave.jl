@@ -13,27 +13,29 @@ end
 ```
 struct Port
     index::Integer
-    impedance::Impedance
-    Port(impedance::Impedance{T}) where {T<:Number} =
-        new(port_counter(), impedance)
+    Z0::Impedance
+    Port(Z0::Impedance{T}) where {T<:Real} =
+        new(port_counter(), Z0)
 end
 ```
 `index`: global index of the port. A port index unique in the system is
 assigned whenever an instance of `Port` is created.
-`impedance`: impedance of the port.
+`Z0`: reference impedance of the port.
 """
 struct Port
     index::Integer
-    impedance::Impedance
-    Port(impedance::Impedance{T}) where {T<:Real} =
-        new(port_counter(), impedance)
+    Z0::Impedance
+    Port(Z0::Impedance{T}) where {T<:Real} =
+        new(port_counter(), Z0)
 end
-Port(impedance::Number) = Port(Impedance(impedance))
+Port(Z0::Number) = Port(Impedance(Z0))
 
 function show(io::IO, port::Port)
-    write(io, "Port $(port.index): impedance = $(port.impedance.data)\n")
+    write(io, "Port $(port.index): Z0 = $(port.Z0.data)\n")
 end
 
-
-is_uniform(ports::Vector{Port}) =
-    all(n -> (ports[1].impedance == ports[n].impedance), 1:nPort)
+"""
+    impedances
+"""
+impedances(ports::Vector{Port}) = [p.Z0 for p in ports]
+is_uniform(ports::Vector{Port}) = foldl(==, impedances(ports))

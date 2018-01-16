@@ -10,6 +10,15 @@ mutable struct CircuitData{S<:Real, T<:CircuitParams} <: AbstractData
         error("CircuitData Error: Number of frequency points and datapoints don't match.")
 end
 
+check_frequency_identical(d1::CircuitData, d2::CircuitData, d3::CircuitData...) =
+    begin
+        data = [d1, d2, d3...]
+        freqs = [d.frequency for d in data]
+        # foldl doesn't seem to work reliably here
+        # foldl(==, freqs)
+        all(n -> (freqs[1] == freqs[n]), 1:length(freqs))
+    end
+
 """
     ndatapoints(d::CircuitData{S, T}) where {S<:Real, T<:CircuitParams}
 The number of datapoints for a given `CircuitData`.

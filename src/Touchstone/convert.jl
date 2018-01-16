@@ -1,9 +1,9 @@
-convert(::Type{Sparams}, R::Touchstone; Z0=50.0) = _Raw_to_S(R; Z0=Z0)
+convert(::Type{Sparams}, raw::TouchstoneData) = _Raw_to_S(raw)
 
 """
-Conversion from `Touchstone` to `NetworkData{Sparams}`
+Conversion from `TouchstoneData` to `NetworkData{Sparams}`
 """
-function _Raw_to_S(touchstone::Touchstone; Z0=50.0)
+function _Raw_to_S(touchstone::TouchstoneData)
     nPort = touchstone.nPort
     nPoint = touchstone.nPoint
     Z0 = touchstone.impedance
@@ -44,43 +44,28 @@ function _Raw_to_S(touchstone::Touchstone; Z0=50.0)
 end
 
 function __touchstone_sparams_ri(nPort, nPoint, data)
-    params = Vector{Sparams}(nPoint)
-    for n in 1:nPoint
-        tmp = zeros(Complex{MFloat}, (nPort, nPort))
-        for i in 1:nPort, j in 1:nPort
+    params = [[begin
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
-            tmp[i, j] = data[idx1, n] + im * data[idx2, n]
-        end
-        params[n] = Sparams(tmp)
-    end
-    return params
+            data[idx1, n] + im * data[idx2, n]
+        end for i in 1:nPort, j in 1:nPort] for n in 1:nPoint]
+    return Sparams(params)
 end
 
 function __touchstone_sparams_ma(nPort, nPoint, data)
-    params = Vector{Sparams}(nPoint)
-    for n in 1:nPoint
-        tmp = zeros(Complex{MFloat}, (nPort, nPort))
-        for i in 1:nPort, j in 1:nPort
+    params = [[begin
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
-            tmp[i, j] = data[idx1, n] * exp(im * π / 180 * data[idx2, n])
-        end
-        params[n] = Sparams(tmp)
-    end
-    return params
+            data[idx1, n] * exp(im * π / 180 * data[idx2, n])
+        end for i in 1:nPort, j in 1:nPort] for n in 1:nPoint]
+    return Sparams(params)
 end
 
 function __touchstone_sparams_db(nPort, nPoint, data)
-    params = Vector{Sparams}(nPoint)
-    for n in 1:nPoint
-        tmp = zeros(Complex{MFloat}, (nPort, nPort))
-        for i in 1:nPort, j in 1:nPort
+    params = [[begin
             idx1 = 1 + 2 * (nPort * (j - 1) + i - 1) + 1
             idx2 = 1 + 2 * (nPort * (j - 1) + i - 1) + 2
-            tmp[i, j] = 10^(data[idx1, n]/20) * exp(im * π/180 * data[idx2, n])
-        end
-        params[n] = Sparams(tmp)
-    end
-    return params
+            10^(data[idx1, n]/20) * exp(im * π/180 * data[idx2, n])
+        end for i in 1:nPort, j in 1:nPort] for n in 1:nPoint]
+    return Sparams(params)
 end

@@ -1,27 +1,31 @@
-export Touchstone, read_touchstone
+module Touchstone
+using ..Network
+export TouchstoneData, read_touchstone
 """
 Touchstone data in its raw form, imported from a touchstone file `*.sNp`
 """
-struct Touchstone{T<:Real}
+struct TouchstoneData
     nPort::Int
     nPoint::Int
-    impedance::T
+    impedance::Float64
     freq_unit::String
     data_type::String
     format_type::String
     data::Array
 end
 
-function show(io::IO, x::Touchstone)
+function show(io::IO, x::TouchstoneData)
     write(io, "$(x.nPort)-Port $(x.nPoint) Point Touchstone with impedance = $(x.impedance), Freq Unit: $(x.freq_unit), Data Type: $(x.data_type), Format Type: $(x.format_type)")
 end
+
+include("convert.jl")
 
 """
 Read information (frequency unit, data type, format type, impedance)
 and data from a touchstone (.sNp) file.
 """
 function read_touchstone(filepath::AbstractString;
-    raw=false, floattype=Float64::Type{T}) where {T<:AbstractFloat}
+    raw=false, floattype::Type{T}=Float64) where {T<:AbstractFloat}
     f = open(filepath, "r")
     # println("Reading touchstone file ", filepath, " ...")
 
@@ -68,13 +72,15 @@ function read_touchstone(filepath::AbstractString;
     data = hcat([v for v in data]...)
     nPoint = length(data[1, :])
     close(f)
-    touchstone = Touchstone(nPort, nPoint, impedance, uppercase(freq_unit),
+    touchstone = TouchstoneData(nPort, nPoint, impedance, uppercase(freq_unit),
     uppercase(data_type), uppercase(format_type), data)
     if raw == true
         return touchstone
     else
         if data_type == "S"
-            return convert(NetworkData{Sparams}, touchstone; Z0=impedance)
+            return convert(Sparams, touchstone)
         end
     end
+end
+
 end

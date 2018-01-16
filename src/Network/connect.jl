@@ -1,12 +1,3 @@
-
-check_frequency_identical(ntwkA::NetworkData{S1, T1},
-    ntwkB::NetworkData{S2, T2}) where {S1<:Real, S2<:Real, T1<:NetworkParams,
-    T2<:NetworkParams} = (ntwkA.frequency == ntwkB.frequency)
-
-check_port_impedance_identical(ntwkA::NetworkData{S1, T1}, k,
-    ntwkB::NetworkData{S2, T2}, l) where {S1<:Real, S2<:Real, T1<:NetworkParams,
-    T2<:NetworkParams} = (ntwkA.ports[k].impedance == ntwkB.ports[k].impedance)
-
 """
     reflection_coefficient(Z1::Number, Z2::Number)
 Reflection coefficient of an impedance step from Z1 to Z2
@@ -45,9 +36,6 @@ S21 = transmission_coefficient(Z1, Z2), S22 = reflection_coefficient(Z2, Z1)
 impedance_step(Z1, Z2) =
     Sparams([reflection_coefficient(Z1, Z2) transmission_coefficient(Z2, Z1);
         transmission_coefficient(Z1, Z2) reflection_coefficient(Z2, Z1)])
-
-is_two_port(ntwk::NetworkData{S, T}) where {S<:Real, T<:NetworkParams} =
-    (ntwk.nPort == 2)
 
 """
     connect_ports(ntwkA::NetworkData{S1, T1}, k::Int,
@@ -111,7 +99,7 @@ function innerconnect_ports(ntwk::NetworkData{S, T}, k::Int, l::Int) where
 end
 
 function _innerconnect_S(ntwk::NetworkData{S, Sparams{T}}, k::Int, l::Int) where
-    {S<:Real, T<:Number}
+    {S<:Real, T<:Real}
     k, l = sort([k, l])
     nPort, nPoint = ntwk.nPort, ntwk.nPoint
     ports = deepcopy(ntwk.ports)
@@ -119,17 +107,17 @@ function _innerconnect_S(ntwk::NetworkData{S, Sparams{T}}, k::Int, l::Int) where
 
     newind = vcat(1:(k-1), (k+1):(l-1), (l+1):nPort)
     params = [begin
-    tmp = zeros(T, (nPort, nPort))
-    S = ntwk.params[n].data
-    for i in newind, j in newind
-        tmp[i, j] = S[i, j] +
-            (S[k, j] * S[i, l] * (1 - S[l, k]) +
-             S[l, j] * S[i, k] * (1 - S[k, l]) +
-             S[k, j] * S[l, l] * S[i, k] +
-             S[l, j] * S[k, k] * S[i, l]) /
-            ((1 - S[k, l]) * (1 - S[l, k]) - S[k, k] * S[l, l])
-    end
-    Sparams(tmp[newind, newind])
+        tmp = zeros(T, (nPort, nPort))
+        S = ntwk.params[n].data
+        for i in newind, j in newind
+            tmp[i, j] = S[i, j] +
+                (S[k, j] * S[i, l] * (1 - S[l, k]) +
+                S[l, j] * S[i, k] * (1 - S[k, l]) +
+                S[k, j] * S[l, l] * S[i, k] +
+                S[l, j] * S[k, k] * S[i, l]) /
+                ((1 - S[k, l]) * (1 - S[l, k]) - S[k, k] * S[l, l])
+        end
+        Sparams(tmp[newind, newind])
     end for n in 1:nPoint]
     return NetworkData(ports, ntwk.frequency, params)
 end
@@ -139,7 +127,7 @@ Connect two network data specified by S parameters.
 """
 function _connect_S(A::NetworkData{S1, Sparams{T1}}, k::Integer,
     B::NetworkData{S2, Sparams{T2}}, l::Integer) where {S1<:Real, S2<:Real,
-    T1<:Number, T2<:Number}
+    T1<:Real, T2<:Real}
     nA, nB = A.nPort, B.nPort
     nPoint = check_frequency_identical(A, B)?
          A.nPoint : error("Frequency Error: The frequency points of two network data doesn't match")
@@ -159,7 +147,7 @@ end
     cascade(ntwk::NetworkData{S, ABCDparams{T}}, N::Integer) where {S<:Real, T<:Number}
 Cascade a 2-port network data `Data` `N` times
 """
-cascade(ntwk::NetworkData{S, ABCDparams{T}}, N::Integer) where {S<:Real, T<:Number} =
+cascade(ntwk::NetworkData{S, ABCDparams{T}}, N::Integer) where {S<:Real, T<:Real} =
     NetworkData(ntwk.ports, ntwk.frequency, [p^N for p in ntwk.params])
 cascade(ntwk::NetworkData{S, T}, N::Integer) where {S<:Real, T<:NetworkParams} =
     convert(T, cascade(convert(ABCDparams, ntwk), N))

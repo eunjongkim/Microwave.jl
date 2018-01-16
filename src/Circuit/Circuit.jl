@@ -4,7 +4,7 @@ import Microwave: AbstractParams, AbstractData
 import Base: +, -, *, /, ^, ==, convert, promote_rule, show, getindex
 
 export CircuitParams, Impedance, Admittance, CircuitData, ∥
-export capacitor, inductor, resistor
+export capacitor, inductor, resistor, check_frequency_identical
 
 include("CircuitParams.jl")
 include("CircuitData.jl")

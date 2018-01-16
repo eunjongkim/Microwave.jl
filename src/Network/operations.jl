@@ -1,9 +1,9 @@
 for f in (:+, :-, :*, :/), p in (:Sparams, :Yparams, :Zparams, :ABCDparams)
     # Operation between NetworkParams
-    @eval ($f)(p1::($p){T}, p2::($p){T}) where {T<:Number} =
+    @eval ($f)(p1::($p){T}, p2::($p){T}) where {T<:Real} =
         (p1.nPort == p2.nPort)? ($p)(($f)(p1.data, p2.data)) :
         error("The number of ports must be identical in order to perform binary operations")
-    @eval ($f)(p1::($p){T}, p2::($p){S}) where {T<:Number, S<:Number} =
+    @eval ($f)(p1::($p){T}, p2::($p){S}) where {T<:Real, S<:Real} =
         (p1.nPort == p2.nPort)? ($p)(($f)(promote(p1.data, p2.data)...)):
         error("The number of ports must be identical in order to perform binary operations")
 end
