@@ -1,11 +1,12 @@
 
 mutable struct CircuitData{S<:Real, T<:CircuitParams} <: AbstractData
+    nPoint::Int
     frequency::Vector{S}
     params::Vector{T}
     CircuitData(frequency::AbstractVector{S}, params::Vector{T}) where
         {S<:Real, T<:CircuitParams} =
         (length(frequency) == length(params))?
-        new{S,T}(collect(frequency), params):
+        new{S,T}(length(frequency), collect(frequency), params):
         error("CircuitData Error: Number of frequency points and datapoints don't match.")
 end
 
@@ -18,7 +19,7 @@ ndatapoints(d::CircuitData{S, T}) where {S<:Real, T<:CircuitParams} =
 
 function show(io::IO, D::CircuitData{S, T}) where {S<:Real, T<:CircuitParams}
     write(io, "CircuitData{$S, $T}, ")
-    write(io, "# datapoints = $(ndatapoints(D))\n")
+    write(io, "# datapoints = $(D.nPoint)\n")
 end
 
 # getindex methods for CircuitData
