@@ -149,8 +149,10 @@ Cascade a 2-port network data `Data` `N` times
 """
 cascade(ntwk::NetworkData{S, ABCDparams{T}}, N::Integer) where {S<:Real, T<:Real} =
     NetworkData(ntwk.ports, ntwk.frequency, [p^N for p in ntwk.params])
-cascade(ntwk::NetworkData{S, T}, N::Integer) where {S<:Real, T<:NetworkParams} =
-    convert(T, cascade(convert(ABCDparams, ntwk), N))
+for p in (:Yparams, :Zparams, :Sparams)
+    @eval cascade(ntwk::NetworkData{S, ($p){T}}, N::Integer) where {S<:Real, T<:Real} =
+        convert($p, cascade(convert(ABCDparams, ntwk), N))
+end
 
 """
     cascade(ntwk1::NetworkData, ntwk2::NetworkData, ntwk3::NetworkData...)
