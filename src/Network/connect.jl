@@ -107,7 +107,7 @@ function _innerconnect_S(ntwk::NetworkData{S, Sparams{T}}, k::Int, l::Int) where
 
     newind = vcat(1:(k-1), (k+1):(l-1), (l+1):nPort)
     params = [begin
-        tmp = zeros(T, (nPort, nPort))
+        tmp = zeros(Complex{T}, (nPort, nPort))
         S = ntwk.params[n].data
         for i in newind, j in newind
             tmp[i, j] = S[i, j] +
@@ -135,7 +135,7 @@ function _connect_S(A::NetworkData{S1, Sparams{T1}}, k::Integer,
     ports = vcat(portsA, portsB)
     # Create a supernetwork containing `A` and `B`
     params = [begin
-        tmp = zeros(promote_type(T1, T2)[1], (nA+nB, nA+nB))
+        tmp = zeros(Complex{promote_type(T1, T2)}, (nA+nB, nA+nB))
         tmp[1:nA, 1:nA] = A.params[n].data
         tmp[(nA+1):(nA+nB), (nA+1):(nA+nB)] = B.params[n].data
     Sparams(tmp)

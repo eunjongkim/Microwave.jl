@@ -37,5 +37,5 @@ end
 """
     impedances
 """
-impedances(ports::Vector{Port}) = [p.Z0 for p in ports]
+impedances(ports::Vector{Port}) = [p.Z0.data for p in ports]
 is_uniform(ports::Vector{Port}) = foldl(==, impedances(ports))

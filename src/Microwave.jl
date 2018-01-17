@@ -36,6 +36,6 @@ import .Touchstone: TouchstoneData, read_touchstone
 export TouchstoneData, read_touchstone
 
 # interpolate data
-# include("interpolate.jl")
+include("interpolate.jl")
 
 end # module
