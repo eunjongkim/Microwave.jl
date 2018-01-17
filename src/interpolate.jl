@@ -11,12 +11,12 @@ for p in (:Sparams, :Yparams, :Zparams, :ABCDparams)
         freq::AbstractVector{R}) where {S<:Real, T<:Real, R<:Real} = begin
             nPort = ntwk.nPort
             d = []
-            # U = promote_type(T, S)
+            U = promote_type(T, S)
             for i in 1:nPort
                 e = []
                 for j in 1:nPort
-                    Sij_itp = interpolate(((ntwk.frequency), ),
-                        (ntwk[(i, j), :]), Gridded(Linear()))
+                    Sij_itp = interpolate((U.(ntwk.frequency), ),
+                        Complex{U}.(ntwk[(i, j), :]), Gridded(Linear()))
             # itp = interpolate(ntwk[(i, j), :], BSpline(Cubic(Line())), OnGrid())
 
             # frng = ntwk.frequency[1]:(ntwk.frequency[end]-ntwk.frequency[1])/(ntwk.nPoint-1):ntwk.frequency[end]
@@ -39,7 +39,8 @@ end
 for p in (:Impedance, :Admittance)
     @eval interpolate_data(cdata::CircuitData{S, ($p){T}},
         freq::AbstractVector{R}) where {S<:Real, T<:Real, R<:Real} = begin
-            itp = interpolate((cdata.frequency, ), cdata[:], Gridded(Linear()))
+            U = promote_type(T, S)
+            itp = interpolate((U.(cdata.frequency), ), Complex{U}.(cdata[:]), Gridded(Linear()))
             CircuitData(freq, ($p)(itp[freq]))
         end
 end
