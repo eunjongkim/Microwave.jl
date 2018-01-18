@@ -2,37 +2,45 @@ using Interpolations
 
 export interpolate_data
 
-"""
-    interpolate_data(ntwk::NetworkData{T}, freq) where {T<:NetworkParams}
-Interpolate `NetworkData` at a new freqeuncy range `freq`.
-"""
-function interpolate_data(ntwk::NetworkData{T}, freq) where {T<:NetworkParams}
-    nPort = ntwk.nPort
-    d = []
+# """
+#     interpolate_data(ntwk::NetworkData{T}, freq) where {T<:NetworkParams}
+# Interpolate `NetworkData` at a new freqeuncy range `freq`.
+# """
+for p in (:Sparams, :Yparams, :Zparams, :ABCDparams)
+    @eval interpolate_data(ntwk::NetworkData{S, ($p){T}},
+        freq::AbstractVector{R}) where {S<:Real, T<:Real, R<:Real} = begin
+            nPort = ntwk.nPort
+            d = []
+            U = promote_type(T, S)
+            for i in 1:nPort
+                e = []
+                for j in 1:nPort
+                    Sij_itp = interpolate((U.(ntwk.frequency), ),
+                        Complex{U}.(ntwk[(i, j), :]), Gridded(Linear()))
+            # itp = interpolate(ntwk[(i, j), :], BSpline(Cubic(Line())), OnGrid())
 
-    for i in 1:nPort
-        e = []
-        for j in 1:nPort
-            itp = interpolate(ntwk[(i, j), :], BSpline(Cubic(Line())), OnGrid())
-            frng = ntwk.frequency[1]:(ntwk.frequency[end]-ntwk.frequency[1])/(ntwk.nPoint-1):ntwk.frequency[end]
-            sitp = scale(itp, frng)
+            # frng = ntwk.frequency[1]:(ntwk.frequency[end]-ntwk.frequency[1])/(ntwk.nPoint-1):ntwk.frequency[end]
+            # sitp = scale(itp, frng)
 #              sitp = scale(itp, ntwk.frequency)
-            push!(e, [sitp[f] for f in freq])
+                    push!(e, Sij_itp[freq])
+                    # push!(e, [sitp[f] for f in freq])
+                end
+                push!(d, e)
+            end
+            params = [($p)([d[i][j][n] for i in 1:nPort, j in 1:nPort]) for n in 1:length(freq)]
+            NetworkData(ntwk.ports, freq, params)
         end
-        push!(d, e)
-    end
-    params = [T(hcat([[d[i][j][n] for j in 1:nPort] for i in 1:nPort]...)) for n in 1:length(freq)]
-
-    return NetworkData(ntwk.ports, collect(freq), params)
 end
 
-"""
-    interpolate_data(cdata::CircuitData{T}, freq) where {T<:CircuitParams}
-Interpolate `CircuitData` at a new freqeuncy range `freq`.
-"""
-function interpolate_data(cdata::CircuitData{T}, freq) where {T<:CircuitParams}
-    itp = interpolate(cdata[:], BSpline(Cubic(Line())), OnGrid())
-    frng = (cdata.frequency[1]):(cdata.frequency[end]-cdata.frequency[1])/(cdata.nPoint-1):(cdata.frequency[end])
-    sitp = scale(itp, frng)
-    return CircuitData(collect(freq), [T(sitp[f]) for f in freq])
+# """
+#     interpolate_data(cdata::CircuitData{T}, freq) where {T<:CircuitParams}
+# Interpolate `CircuitData` at a new freqeuncy range `freq`.
+# """
+for p in (:Impedance, :Admittance)
+    @eval interpolate_data(cdata::CircuitData{S, ($p){T}},
+        freq::AbstractVector{R}) where {S<:Real, T<:Real, R<:Real} = begin
+            U = promote_type(T, S)
+            itp = interpolate((U.(cdata.frequency), ), Complex{U}.(cdata[:]), Gridded(Linear()))
+            CircuitData(freq, ($p)(itp[freq]))
+        end
 end

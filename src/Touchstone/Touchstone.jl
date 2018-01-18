@@ -1,8 +1,10 @@
-export Touchstone, read_touchstone
+module Touchstone
+using ..Network
+export TouchstoneData, read_touchstone
 """
 Touchstone data in its raw form, imported from a touchstone file `*.sNp`
 """
-struct Touchstone
+struct TouchstoneData
     nPort::Int
     nPoint::Int
     impedance::Float64
@@ -12,15 +14,18 @@ struct Touchstone
     data::Array
 end
 
-function show(io::IO, x::Touchstone)
-    write(io, "$(x.nPort)-Port $(x.nPoint) Points Touchstone with impedance = $(x.impedance), Freq Unit: $(x.freq_unit), Data Type: $(x.data_type), Format Type: $(x.format_type)")
+function show(io::IO, x::TouchstoneData)
+    write(io, "$(x.nPort)-Port $(x.nPoint) Point Touchstone with impedance = $(x.impedance), Freq Unit: $(x.freq_unit), Data Type: $(x.data_type), Format Type: $(x.format_type)")
 end
+
+include("convert.jl")
 
 """
 Read information (frequency unit, data type, format type, impedance)
 and data from a touchstone (.sNp) file.
 """
-function read_touchstone(filepath::AbstractString; raw=false)
+function read_touchstone(filepath::AbstractString;
+    raw=false, floattype::Type{T}=Float64) where {T<:AbstractFloat}
     f = open(filepath, "r")
     # println("Reading touchstone file ", filepath, " ...")
 
@@ -57,7 +62,7 @@ function read_touchstone(filepath::AbstractString; raw=false)
                 end
             end
             if line != ""
-                data_vec = [parse(Float64, d) for d in split(line)]
+                data_vec = [parse(floattype, d) for d in split(line)]
             end
             data = [data..., data_vec]
         else
@@ -67,13 +72,15 @@ function read_touchstone(filepath::AbstractString; raw=false)
     data = hcat([v for v in data]...)
     nPoint = length(data[1, :])
     close(f)
-    touchstone = Touchstone(nPort, nPoint, impedance, uppercase(freq_unit),
+    touchstone = TouchstoneData(nPort, nPoint, impedance, uppercase(freq_unit),
     uppercase(data_type), uppercase(format_type), data)
     if raw == true
         return touchstone
     else
         if data_type == "S"
-            return convert(NetworkData{Sparams}, touchstone)
+            return convert(Sparams, touchstone)
         end
     end
+end
+
 end

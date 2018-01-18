@@ -1,81 +1,64 @@
-export NetworkParams, Sparams, Yparams, Zparams
-export TwoPortParams, ABCDparams
+abstract type NetworkParams{T<:Real} <: AbstractParams end
+abstract type TwoPortParams{T<:Real} <: NetworkParams{T} end
 
-abstract type NetworkParams end
-abstract type TwoPortParams <: NetworkParams end
-
+check_row_column(data::Array{T, 2}) where {T<:Number} =
+    begin nr, nc = size(data)
+        (nr == nc)? nr: error("Number of rows and columns doesn't match")
+    end
 
 """
     Sparams(nPort, data) <: NetworkParams
-Scattering parameters for microwave network. Contains a
+Scattering parameters for microwave network.
 """
-mutable struct Sparams <: NetworkParams
+mutable struct Sparams{T<:Real} <: NetworkParams{T}
     nPort::Int
-    data::Array{Complex{MFloat}, 2}
-    function Sparams(data)
-        nr, nc = size(data)
-        if nr != nc
-            error("Sparams Error: The number of rows and columns doesn't match")
-        else
-            new(nr, data)
-        end
-    end
+    data::Matrix{Complex{T}}
+    Sparams(data::Matrix{Complex{T}}) where {T<:Real} =
+        new{T}(check_row_column(data), data)
 end
+Sparams(data::Matrix{T}) where {T<:Real} = Sparams(complex(data))
+Sparams(P::Vector{Matrix{T}}) where {T<:Number} = [Sparams(p) for p in P]
 
 """
     Yparams(nPort, data) <: NetworkParams
-Admittance-parameters for microwave network
+Admittance parameters for microwave network
 """
-mutable struct Yparams <: NetworkParams
+mutable struct Yparams{T<:Real} <: NetworkParams{T}
     nPort::Int
-    data::Array{Complex{MFloat}, 2}
-    function Yparams(data)
-        nr, nc = size(data)
-        if nr != nc
-            error("Yparams Error: The number of rows and columns doesn't match")
-        else
-            new(nr, data)
-        end
-    end
+    data::Matrix{Complex{T}}
+    Yparams(data::Matrix{Complex{T}}) where {T<:Real} =
+        new{T}(check_row_column(data), data)
 end
+Yparams(data::Matrix{T}) where {T<:Real} = Yparams(complex(data))
+Yparams(P::Vector{Matrix{T}}) where {T<:Number} = [Yparams(p) for p in P]
 
 """
     Zparams(nPort, data) <: NetworkParams
 Impedance-parameters for microwave network
 """
-mutable struct Zparams <: NetworkParams
+mutable struct Zparams{T<:Real} <: NetworkParams{T}
     nPort::Int
-    data::Array{Complex{MFloat}, 2}
-    function Zparams(data)
-        nr, nc = size(data)
-        if nr != nc
-            error("Zparams Error: The number of rows and columns doesn't match")
-        else
-            new(nr, data)
-        end
-    end
+    data::Matrix{Complex{T}}
+    Zparams(data::Matrix{Complex{T}}) where {T<:Real} =
+        new{T}(check_row_column(data), data)
 end
+Zparams(data::Matrix{T}) where {T<:Real} = Zparams(complex(data))
+Zparams(P::Vector{Matrix{T}}) where {T<:Number} = [Zparams(p) for p in P]
 
 """
-    ABCDparams(nPort, data) <: NetworkParams
+    ABCDparams(nPort, data) <: TwoPortParams
 Transfer-parameters for microwave network
 """
-mutable struct ABCDparams <: TwoPortParams
+mutable struct ABCDparams{T<:Real} <: TwoPortParams{T}
     nPort::Int
-    data::Array{Complex{MFloat}, 2}
-    function ABCDparams(data)
-        nr, nc = size(data)
-        if nr != nc
-            error("ABCDparams Error: The number of rows and columns doesn't match")
-        else
-            if (nr!=2)|(nc!=2)
-                error("ABCDparams Error: the number of ports must be equal to 2")
-            else
-                new(nr, data)
-            end
-        end
+    data::Matrix{Complex{T}}
+    ABCDparams(data::Matrix{Complex{T}}) where {T<:Real} = begin
+        n = check_row_column(data)
+        (n == 2)? new{T}(n, data): error("ABCDparams are defined only for 2×2 matrices")
     end
 end
+ABCDparams(data::Matrix{T}) where {T<:Real} = ABCDparams(complex(data))
+ABCDparams(P::Vector{Matrix{T}}) where {T<:Number} = [ABCDparams(p) for p in P]
 
 """
     show(io::IO, params::NetworkParams)
@@ -90,29 +73,3 @@ function show(io::IO, params::NetworkParams)
         write(io, "\n")
     end
 end
-
-function +(param1::T, param2::T) where {T<:NetworkParams}
-    if param1.nPort == param2.nPort
-        return T(param1.data + param2.data)
-    else
-        error("The number of ports must be identical in order to perform binary operations")
-    end
-end
-
-function -(param1::T, param2::T) where {T<:NetworkParams}
-    if param1.nPort == param2.nPort
-        return T(param1.data - param2.data)
-    else
-        error("The number of ports must be identical in order to perform binary operations")
-    end
-end
-
-function *(param1::T, param2::T) where {T<:NetworkParams}
-    if param1.nPort == param2.nPort
-        return T(param1.data * param2.data)
-    else
-        error("The number of ports must be identical in order to perform binary operations")
-    end
-end
-
-^(param::T, N::Int) where {T<:NetworkParams} = T(^(param.data,N))
