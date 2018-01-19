@@ -165,8 +165,8 @@ function cascade(ntwk1::NetworkData, ntwk2::NetworkData,
         .*([convert(ABCDparams, ntwk).params for ntwk in ntwks]...))
 end
 
-function cascade(ntwk1::NetworkData, ntwk2::NetworkData, ntwk3::NetworkData...)
-    ntwks = [ntwk1, ntwk2, ntwk3...]
-    abcd_ntwks = [convert(ABCDparams, ntwk) for ntwk in ntwks]
-    return cascade(abcd_ntwks...)
-end
+# function cascade(ntwk1::NetworkData, ntwk2::NetworkData, ntwk3::NetworkData...)
+#     ntwks = [ntwk1, ntwk2, ntwk3...]
+#     abcd_ntwks = [convert(ABCDparams, ntwk) for ntwk in ntwks]
+#     return cascade(abcd_ntwks...)
+# end
