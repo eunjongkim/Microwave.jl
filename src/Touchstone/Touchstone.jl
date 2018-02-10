@@ -27,7 +27,7 @@ and data from a touchstone (.sNp) file.
 function read_touchstone(filepath::AbstractString;
     raw=false, floattype::Type{T}=Float64) where {T<:AbstractFloat}
     f = open(filepath, "r")
-    # println("Reading touchstone file ", filepath, " ...")
+    info("Reading touchstone file ", filepath, " ...")
 
     if ~(uppercase(filepath[end-2]) == 'S') | ~(uppercase(filepath[end]) == 'P')
         return error("Not a touchstone (.sNp) file.")
@@ -36,7 +36,7 @@ function read_touchstone(filepath::AbstractString;
     end
 
     phrase = "!"
-    while phrase[1] != '#'
+    while (length(phrase) == 0) || (phrase[1] != '#')
         #=
         read lines until first encountering '#', where frequency unit,
         data type, format type, and impedance are stored.
